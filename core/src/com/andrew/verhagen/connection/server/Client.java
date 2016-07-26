@@ -4,14 +4,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
 
 public class Client {
 
     private DatagramPacket packet;
     private DatagramSocket socket;
-    private DatagramChannel channel;
 
     private InetAddress serverAddress;
     private int serverPort = 9001;
@@ -21,16 +20,19 @@ public class Client {
 
     private InputThread inputThread;
 
+    private byte connectionState = ConnectionStates.WAITING_FOR_OPPONENT;
+    private int sequenceNumber;
+
     public Client() {
         try {
             serverAddress = InetAddress.getByName("192.168.0.4");
             socket = new DatagramSocket();
             packet = new DatagramPacket(new byte[4], 0, 4, serverAddress, serverPort);
-            channel = DatagramChannel.open();
-            channel.socket().bind(null);
             if (establishConnection()) {
                 inputThread = new InputThread();
                 inputThread.start();
+                Client.OutputThread outputThread = this.new OutputThread();
+                outputThread.start();
             } else {
                 System.out.println("Failed to connect to server");
             }
@@ -58,31 +60,89 @@ public class Client {
         return false;
     }
 
-    private class InputThread extends Thread {
+    private boolean setOutputData(ByteBuffer outputData) {
+        outputData.clear();
+        outputData.putInt(GameServer.PACKET_HEADER);
+        if (connectionState == ConnectionStates.GAME_OVER) {
+            return false;
+        } else {
+            outputData.put(connectionState);
+            if (connectionState == ConnectionStates.WAITING_FOR_OPPONENT) {
+
+            } else if (connectionState == ConnectionStates.GAME_ON) {
+                outputData.putInt(sequenceNumber);
+            }
+            return true;
+        }
+    }
+
+    private boolean isConnected() {
+        if (connectionState == ConnectionStates.WAITING_FOR_OPPONENT
+                || connectionState == ConnectionStates.GAME_ON
+                || connectionState == ConnectionStates.STARTING)
+            return true;
+        else
+            return false;
+    }
+
+    private class OutputThread extends Thread {
+
+        private ByteBuffer outputData;
+        private DatagramPacket outputPacket;
+
+        public OutputThread() {
+            outputData = ByteBuffer.allocate(256);
+            outputPacket = new DatagramPacket(outputData.array(), outputData.capacity());
+        }
 
         @Override
         public void run() {
-            byte[] inputArray = new byte[256];
-            ByteBuffer inputData = ByteBuffer.wrap(inputArray);
-            DatagramPacket inputPacket = new DatagramPacket(inputArray, inputArray.length);
             try {
-                socket.setSoTimeout(10000);
-                while (true) {
-                    System.out.println("Waiting for input");
+                while (isConnected() && setOutputData(outputData)) {
+                    System.out.println("Output position " + outputData.position());
+                    outputPacket.setLength(outputData.position());
+                    outputPacket.setAddress(roomAddress);
+                    outputPacket.setPort(roomPort);
+                    socket.send(outputPacket);
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+
+            }
+            System.out.println("Stopped output");
+        }
+    }
+
+    private class InputThread extends Thread {
+
+        private ByteBuffer inputData;
+        private DatagramPacket inputPacket;
+        private float msSinceLastValidData;
+        private final int timeOutTime = 2000;
+
+        public InputThread() {
+            inputData = ByteBuffer.allocate(256);
+            inputPacket = new DatagramPacket(inputData.array(), inputData.capacity());
+            msSinceLastValidData = 0;
+        }
+
+        @Override
+        public void run() {
+            try {
+                socket.setSoTimeout(timeOutTime);
+                while (isConnected()) {
                     socket.receive(inputPacket);
-                    inputData.limit(inputPacket.getLength());
-
-                    if (inputPacket.getAddress().equals(roomAddress) && inputPacket.getPort() == roomPort) {
-
-                        if (inputData.getInt() == GameServer.PACKET_HEADER) {
-                            byte connectionState = inputData.get();
-                            if (connectionState == ConnectionStates.WAITING_FOR_OPPONENT) {
-                                System.out.println("Waiting for opponent");
-                            } else if (connectionState == ConnectionStates.GAME_ON) {
-                                int sequenceNumber = inputData.getInt();
-                                System.out.format("Game on sn:%d\n", sequenceNumber);
-                            }
-                        }
+                    try {
+                        //Check if incoming packet is from the established room
+                        if (inputPacket.getAddress().equals(roomAddress) && inputPacket.getPort() == roomPort) {
+                            readInputData();
+                        } else handleInvalidData();
+                    } catch (BufferUnderflowException underflow) {
+                        handleInvalidData();
                     }
                     inputData.clear();
                 }
@@ -90,6 +150,29 @@ public class Client {
 
             } finally {
                 socket.close();
+            }
+            System.out.println("Stopped input");
+        }
+
+        private void readInputData() {
+            inputData.limit(inputPacket.getLength());
+            //Check if first four bytes match packet header
+            if (inputData.getInt() == GameServer.PACKET_HEADER) {
+                byte connectionState = inputData.get();
+                if (connectionState == ConnectionStates.WAITING_FOR_OPPONENT) {
+                    Client.this.connectionState = ConnectionStates.WAITING_FOR_OPPONENT;
+                    System.out.format("Waiting for opponent\n");
+                } else if (connectionState == ConnectionStates.GAME_ON) {
+                    Client.this.connectionState = ConnectionStates.GAME_ON;
+                    Client.this.sequenceNumber = inputData.getInt();
+                }
+            }
+            msSinceLastValidData = 0;
+        }
+
+        private void handleInvalidData() {
+            if (msSinceLastValidData >= timeOutTime) {
+                connectionState = ConnectionStates.GAME_OVER;
             }
         }
     }

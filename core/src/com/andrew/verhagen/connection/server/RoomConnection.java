@@ -10,66 +10,85 @@ import java.nio.ByteBuffer;
 public class RoomConnection {
 
     private OutputThread outputThread;
+    private RoomInputConnection inputThread;
     private DatagramSocket socket;
     private Player playerOne;
     private Player playerTwo;
-    private DatagramPacket outputPacket;
-    private ByteBuffer outputByteBuffer;
     private int sequenceNumber;
+    private boolean needsPlayer;
 
     public RoomConnection() {
-        outputThread = new OutputThread();
-        playerOne = null;
-        playerTwo = null;
-        byte[] outputData = new byte[256];
-        outputPacket = new DatagramPacket(outputData, outputData.length);
-        outputByteBuffer = ByteBuffer.wrap(new byte[256]);
         try {
             socket = new DatagramSocket();
         } catch (SocketException e) {
             e.printStackTrace();
         }
+        needsPlayer = true;
+        outputThread = new OutputThread();
+        inputThread = new RoomInputConnection(socket);
+        playerOne = new Player();
+        playerTwo = new Player();
     }
 
     public void addPlayer(InetAddress playerAddress, int playerPort) {
         System.out.println("Added player at " + playerAddress + " " + playerPort);
-        if (playerOne == null) {
+        if (!playerOne.connected) {
             playerOne = new Player(playerAddress, playerPort);
+            playerOne.timeSinceLastInput = System.nanoTime();
             outputThread.start();
-        } else if (playerTwo == null) {
+            inputThread.start();
+        } else if (!playerTwo.connected) {
             playerTwo = new Player(playerAddress, playerPort);
+            playerTwo.timeSinceLastInput = System.nanoTime();
+            needsPlayer = false;
         }
     }
 
     public boolean needsPlayer() {
-        if (playerOne == null || playerTwo == null) return true;
-        return false;
+        return needsPlayer;
     }
 
-    private void fillOutputPacketWithGameState() {
-        outputByteBuffer.clear();
-        outputByteBuffer.putInt(GameServer.PACKET_HEADER);
+    private void fillByteBufferWithGameState(ByteBuffer buffer) {
+        buffer.clear();
+        buffer.putInt(GameServer.PACKET_HEADER);
         if (this.needsPlayer()) {
-            outputByteBuffer.put(ConnectionStates.WAITING_FOR_OPPONENT);
+            buffer.put(ConnectionStates.WAITING_FOR_OPPONENT);
         } else {
-            outputByteBuffer.put(ConnectionStates.GAME_ON);
-            outputByteBuffer.putInt(sequenceNumber++);
+            buffer.put(ConnectionStates.GAME_ON);
+            buffer.putInt(sequenceNumber++);
         }
-        outputPacket.setData(outputByteBuffer.array(), 0, outputByteBuffer.position());
+    }
+
+    private Player getPlayerWithAddress(InetAddress incomingAddress, int incomingPort) {
+        if (incomingAddress.equals(playerOne.address) && incomingPort == playerOne.port) {
+            return playerOne;
+        } else if (incomingAddress.equals(playerTwo.address) && incomingPort == playerTwo.port) {
+            return playerTwo;
+        } else return null;
     }
 
     private class OutputThread extends Thread {
+
+        private ByteBuffer outputBuffer;
+        private DatagramPacket outputPacket;
+
+        public OutputThread() {
+            outputBuffer = ByteBuffer.allocate(256);
+            outputPacket = new DatagramPacket(outputBuffer.array(), outputBuffer.capacity());
+        }
+
         @Override
         public void run() {
             try {
-                while (true) {
-                    fillOutputPacketWithGameState();
-                    if (playerOne != null) {
+                while (playerOne.connected || playerTwo.connected) {
+                    fillByteBufferWithGameState(outputBuffer);
+                    outputPacket.setLength(outputBuffer.position());
+                    if (playerOne.connected) {
                         outputPacket.setAddress(playerOne.address);
                         outputPacket.setPort(playerOne.port);
                         socket.send(outputPacket);
                     }
-                    if (playerTwo != null) {
+                    if (playerTwo.connected) {
                         outputPacket.setAddress(playerTwo.address);
                         outputPacket.setPort(playerTwo.port);
                         socket.send(outputPacket);
@@ -85,47 +104,54 @@ public class RoomConnection {
             } finally {
                 socket.close();
             }
+            System.out.print("Room output stopped");
         }
     }
 
-    private void writeGameState(GameState gameState) {
-//        try {
-////            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-////            ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayOutputStream);
-////            outputStream.writeObject(gameState);
-////            ByteBuffer byteBuffer = ByteBuffer.wrap(byteArrayOutputStream.toByteArray());
-////            channel.send(byteBuffer, playerOneAddress);
-////            channel.send(byteBuffer, playerTwoAddress);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-    }
+    protected class RoomInputConnection extends InputConnection {
 
+        private Player currentInputPlayer;
 
-    protected class InputConnection implements Runnable {
+        public RoomInputConnection(DatagramSocket socket) {
+            super(socket);
+        }
 
         @Override
-        public void run() {
-            byte[] inputBuffer = new byte[256];
-            ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputBuffer);
-            DatagramPacket inputPacket = new DatagramPacket(inputBuffer, inputBuffer.length);
-            InetAddress incomingAddress;
-            while (true) {
-                try {
-                    socket.receive(inputPacket);
-                    incomingAddress = inputPacket.getAddress();
-//                    if (inputByteBuffer.getInt() == roomHeader) {
-//                        if (incomingAddress == playerOneAddress) {
-//
-//                        } else if (incomingAddress == playerTwoAddress) {
-//
-//                        }
-//                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+        protected boolean runCondition() {
+            return playerOne.connected || playerTwo.connected;
+        }
+
+        @Override
+        protected void handleInputData() {
+            long receptionTime = System.nanoTime();
+
+            currentInputPlayer = getPlayerWithAddress(inputPacket.getAddress(), inputPacket.getPort());
+
+            if (currentInputPlayer != null) {
+                if (inputData.getInt() == GameServer.PACKET_HEADER) {
+                    if (inputData.get() == ConnectionStates.WAITING_FOR_OPPONENT) {
+
+                    } else if (inputData.get() == ConnectionStates.GAME_ON) {
+
+                    }
+                    currentInputPlayer.timeSinceLastInput = receptionTime;
                 }
             }
+            if (playerOne.connected) {
+                if ((receptionTime - playerOne.timeSinceLastInput) > timeOutTimeInNanoSeconds)
+                    playerOne.connected = false;
+            }
+            if (playerTwo.connected) {
+                if ((receptionTime - playerTwo.timeSinceLastInput) > timeOutTimeInNanoSeconds)
+                    playerTwo.connected = false;
+            }
+        }
 
+        @Override
+        protected void handleFinally() {
+            playerOne.connected = false;
+            playerTwo.connected = false;
+            needsPlayer = true;
         }
     }
 }
