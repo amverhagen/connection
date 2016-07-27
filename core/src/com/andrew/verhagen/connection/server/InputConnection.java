@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 
 public abstract class InputConnection extends Thread {
 
-    protected boolean acceptInput;
     protected ByteBuffer inputData;
     protected DatagramPacket inputPacket;
     protected DatagramSocket inputSocket;
@@ -15,7 +14,6 @@ public abstract class InputConnection extends Thread {
     protected final int timeOutTimeInMilliSeconds = (int) (timeOutTimeInNanoSeconds / 1000000L);
 
     public InputConnection(DatagramSocket inputSocket) {
-        this.acceptInput = true;
         this.inputSocket = inputSocket;
         this.inputData = ByteBuffer.allocate(256);
         this.inputPacket = new DatagramPacket(inputData.array(), inputData.capacity());

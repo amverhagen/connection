@@ -1,7 +1,6 @@
 package com.andrew.verhagen.connection.server;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
@@ -9,13 +8,13 @@ import java.nio.ByteBuffer;
 
 public class RoomConnection {
 
-    private OutputThread outputThread;
+    private RoomOutputConnection outputThread;
     private RoomInputConnection inputThread;
     private DatagramSocket socket;
     private Player playerOne;
     private Player playerTwo;
+    private boolean roomNeedsPlayer;
     private int sequenceNumber;
-    private boolean needsPlayer;
 
     public RoomConnection() {
         try {
@@ -23,11 +22,15 @@ public class RoomConnection {
         } catch (SocketException e) {
             e.printStackTrace();
         }
-        needsPlayer = true;
-        outputThread = new OutputThread();
+        outputThread = new RoomOutputConnection();
         inputThread = new RoomInputConnection(socket);
+        clearRoom();
+    }
+
+    private void clearRoom() {
         playerOne = new Player();
         playerTwo = new Player();
+        roomNeedsPlayer = true;
     }
 
     public void addPlayer(InetAddress playerAddress, int playerPort) {
@@ -40,12 +43,12 @@ public class RoomConnection {
         } else if (!playerTwo.connected) {
             playerTwo = new Player(playerAddress, playerPort);
             playerTwo.timeSinceLastInput = System.nanoTime();
-            needsPlayer = false;
+            roomNeedsPlayer = false;
         }
     }
 
     public boolean needsPlayer() {
-        return needsPlayer;
+        return roomNeedsPlayer;
     }
 
     private void fillByteBufferWithGameState(ByteBuffer buffer) {
@@ -67,14 +70,10 @@ public class RoomConnection {
         } else return null;
     }
 
-    private class OutputThread extends Thread {
+    private class RoomOutputConnection extends OutputConnection {
 
-        private ByteBuffer outputBuffer;
-        private DatagramPacket outputPacket;
-
-        public OutputThread() {
-            outputBuffer = ByteBuffer.allocate(256);
-            outputPacket = new DatagramPacket(outputBuffer.array(), outputBuffer.capacity());
+        public RoomOutputConnection() {
+            super();
         }
 
         @Override
@@ -149,9 +148,7 @@ public class RoomConnection {
 
         @Override
         protected void handleFinally() {
-            playerOne.connected = false;
-            playerTwo.connected = false;
-            needsPlayer = true;
+            clearRoom();
         }
     }
 }

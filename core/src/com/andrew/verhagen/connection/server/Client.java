@@ -85,22 +85,18 @@ public class Client {
             return false;
     }
 
-    private class OutputThread extends Thread {
-
-        private ByteBuffer outputData;
-        private DatagramPacket outputPacket;
+    private class OutputThread extends OutputConnection {
 
         public OutputThread() {
-            outputData = ByteBuffer.allocate(256);
-            outputPacket = new DatagramPacket(outputData.array(), outputData.capacity());
+            super();
         }
 
         @Override
         public void run() {
             try {
-                while (isConnected() && setOutputData(outputData)) {
-                    System.out.println("Output position " + outputData.position());
-                    outputPacket.setLength(outputData.position());
+                while (isConnected() && setOutputData(outputBuffer)) {
+                    System.out.println("Output position " + outputBuffer.position());
+                    outputPacket.setLength(outputBuffer.position());
                     outputPacket.setAddress(roomAddress);
                     outputPacket.setPort(roomPort);
                     socket.send(outputPacket);
