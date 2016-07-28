@@ -112,7 +112,7 @@ public class RoomConnection {
         private Player currentInputPlayer;
 
         public RoomInputConnection(DatagramSocket socket) {
-            super(socket);
+            super(socket, 2000000000l);
         }
 
         @Override

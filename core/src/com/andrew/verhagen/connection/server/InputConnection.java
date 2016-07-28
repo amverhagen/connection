@@ -10,10 +10,12 @@ public abstract class InputConnection extends Thread {
     protected ByteBuffer inputData;
     protected DatagramPacket inputPacket;
     protected DatagramSocket inputSocket;
-    protected final long timeOutTimeInNanoSeconds = 2000000000l;
-    protected final int timeOutTimeInMilliSeconds = (int) (timeOutTimeInNanoSeconds / 1000000L);
+    protected final long timeOutTimeInNanoSeconds;
+    protected final int timeOutTimeInMilliSeconds;
 
-    public InputConnection(DatagramSocket inputSocket) {
+    public InputConnection(DatagramSocket inputSocket, long timeOutTimeInNanoSeconds) {
+        this.timeOutTimeInNanoSeconds = timeOutTimeInNanoSeconds;
+        timeOutTimeInMilliSeconds = (int) (timeOutTimeInNanoSeconds / 1000000L);
         this.inputSocket = inputSocket;
         this.inputData = ByteBuffer.allocate(256);
         this.inputPacket = new DatagramPacket(inputData.array(), inputData.capacity());
