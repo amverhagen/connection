@@ -19,7 +19,8 @@ public class ConnectionAddress {
         this.connectionAddress = new InetSocketAddress(destinationAddress, destinationPort);
     }
 
-    public boolean hasSameAddressAndPort(InetAddress address, int port) {
-        return this.connectionAddress.getAddress().equals(address) && this.connectionAddress.getPort() == port;
+    public boolean hasSameAddressAndPort(ConnectionAddress incomingAddress) {
+        return this.connectionAddress.getAddress().equals(incomingAddress.connectionAddress.getAddress())
+                && this.connectionAddress.getPort() == incomingAddress.connectionAddress.getPort();
     }
 }

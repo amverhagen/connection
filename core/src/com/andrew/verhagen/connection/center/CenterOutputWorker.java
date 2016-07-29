@@ -26,6 +26,8 @@ class CenterOutputWorker extends Thread {
             }
         } catch (Exception e) {
 
+        } finally {
+            socket.close();
         }
     }
 }

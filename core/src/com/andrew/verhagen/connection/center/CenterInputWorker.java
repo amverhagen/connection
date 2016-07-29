@@ -10,14 +10,12 @@ class CenterInputWorker extends Thread {
     private DatagramPacket inputPacket;
     private ByteBuffer inputData;
     private ConnectionCenterHandler inputHandler;
-    private ConnectionCenter connectionCenter;
 
-    public CenterInputWorker(DatagramSocket inputSocket, ConnectionCenter connectionCenter, ConnectionCenterHandler inputHandler) {
+    public CenterInputWorker(DatagramSocket inputSocket, ConnectionCenterHandler inputHandler) {
         this.inputSocket = inputSocket;
         this.inputHandler = inputHandler;
-        this.inputData = ByteBuffer.allocate(inputHandler.connectionSize);
+        this.inputData = ByteBuffer.allocate(inputHandler.maxPacketSizeInBytes);
         this.inputPacket = new DatagramPacket(inputData.array(), inputData.capacity());
-        this.connectionCenter = connectionCenter;
     }
 
     @Override
@@ -26,10 +24,13 @@ class CenterInputWorker extends Thread {
             while (true) {
                 inputSocket.receive(inputPacket);
                 ConnectionAddress inputAddress = new ConnectionAddress(inputPacket.getAddress(), inputPacket.getPort(), 0);
-                inputHandler.handleNewInput(inputData, inputAddress);
+                inputData.limit(inputPacket.getLength());
+                inputHandler.refreshHandlerWithInput(inputData, inputAddress);
+                inputData.clear();
             }
         } catch (Exception e) {
-            connectionCenter.emptyConnectionCenter();
+        } finally {
+            inputSocket.close();
         }
     }
 }
