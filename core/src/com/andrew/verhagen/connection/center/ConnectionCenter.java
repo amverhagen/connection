@@ -8,29 +8,51 @@ public final class ConnectionCenter {
 
     protected DatagramSocket connectionSocket;
 
+    private boolean isCenterOn;
     private CenterInputWorker inputWorker;
     private CenterOutputWorker outputWorker;
     private ConnectionCenterHandler centerHandler;
+
 
     public ConnectionCenter(ConnectionCenterHandler centerHandler) {
         this.centerHandler = centerHandler;
         this.centerHandler.setConnectionCenter(this);
     }
 
+    public ConnectionCenter(ConnectionCenterHandler centerHandler, DatagramSocket socket, InetSocketAddress address) {
+        this(centerHandler);
+        this.restartCenter(socket);
+        this.addAddress(address);
+    }
+
     public synchronized boolean addAddress(InetSocketAddress incomingAddress) {
         if (connectionSocket == null || connectionSocket.isClosed()) {
             restartCenter();
         }
-        return centerHandler.addAddress(incomingAddress);
+        if (centerHandler.addAddress(incomingAddress)) {
+            if (!isCenterOn)
+                this.startCenter();
+            return true;
+        }
+        return false;
     }
 
-    public synchronized boolean holdingConnection(ConnectionAddress incomingConnectionAddress) {
+    public synchronized boolean holdingConnection(InetSocketAddress incomingConnectionAddress) {
         return centerHandler.holdingConnection(incomingConnectionAddress);
     }
 
     private void restartCenter() {
         try {
-            connectionSocket = new DatagramSocket();
+            restartCenter(new DatagramSocket());
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void restartCenter(DatagramSocket socket) {
+        try {
+            System.out.println("Restarted Center");
+            connectionSocket = socket;
             connectionSocket.setSoTimeout(centerHandler.timeOutTimeInMilliseconds);
             centerHandler.resetHandler(connectionSocket);
             inputWorker = new CenterInputWorker(connectionSocket, centerHandler);
@@ -41,6 +63,7 @@ public final class ConnectionCenter {
     }
 
     protected synchronized void startCenter() {
+        isCenterOn = true;
         inputWorker.start();
         outputWorker.start();
     }

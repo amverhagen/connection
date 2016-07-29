@@ -38,11 +38,18 @@ public abstract class ConnectionCenterHandler {
         this.expiredConnectionAddresses.clear();
     }
 
-    protected synchronized void setConnectionCenter(ConnectionCenter connectionCenter) {
+    protected synchronized final void setConnectionCenter(ConnectionCenter connectionCenter) {
         this.connectionCenter = connectionCenter;
     }
 
-    synchronized void refreshHandlerWithInput(ByteBuffer inputData, ConnectionAddress inputAddress) {
+    protected synchronized final boolean holdingConnection(InetSocketAddress incomingAddress) {
+        for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
+            if (connectionAddress.hasSameAddressAndPort(incomingAddress)) return true;
+        }
+        return false;
+    }
+
+    synchronized final void refreshHandlerWithInput(ByteBuffer inputData, InetSocketAddress inputAddress) {
         long receptionTime = System.nanoTime();
 
         for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
@@ -50,7 +57,8 @@ public abstract class ConnectionCenterHandler {
                 expiredConnectionAddresses.add(connectionAddress);
             }
         }
-        removeExpiredAddresses();
+        if (expiredConnectionAddresses.size() > 0)
+            removeExpiredAddresses();
 
         if (this.holdingConnection(inputAddress))
             handleNewInput(inputData, inputAddress);
@@ -60,11 +68,7 @@ public abstract class ConnectionCenterHandler {
 
     protected abstract void removeExpiredAddresses();
 
-    //create output data,
-    //foreach conn, send on socket
-    protected abstract void sendOutputData(DatagramSocket outputSocket);
+    protected abstract void sendOutputData(DatagramSocket outputSocket) throws Exception;
 
-    protected abstract boolean holdingConnection(ConnectionAddress incomingAddress);
-
-    protected abstract void handleNewInput(ByteBuffer inputData, ConnectionAddress inputAddress);
+    protected abstract void handleNewInput(ByteBuffer inputData, InetSocketAddress inputAddress);
 }

@@ -2,10 +2,10 @@ package com.andrew.verhagen.connection.room;
 
 import com.andrew.verhagen.connection.center.ConnectionAddress;
 
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 public class RoomPlayer extends ConnectionAddress {
-    public RoomPlayer(InetAddress destinationAddress, int destinationPort, int timeOutTimeInMilliSeconds) {
-        super(destinationAddress, destinationPort, timeOutTimeInMilliSeconds);
+    public RoomPlayer(InetSocketAddress inetSocketAddress, int timeOutTimeInMilliSeconds) {
+        super(inetSocketAddress.getAddress(), inetSocketAddress.getPort(), timeOutTimeInMilliSeconds);
     }
 }

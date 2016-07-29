@@ -2,6 +2,7 @@ package com.andrew.verhagen.connection.center;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
 class CenterInputWorker extends Thread {
@@ -22,14 +23,17 @@ class CenterInputWorker extends Thread {
     public void run() {
         try {
             while (true) {
+                System.out.println("Waiting for input on " + inputSocket.getLocalSocketAddress());
                 inputSocket.receive(inputPacket);
-                ConnectionAddress inputAddress = new ConnectionAddress(inputPacket.getAddress(), inputPacket.getPort(), 0);
+                System.out.println("Received Input");
                 inputData.limit(inputPacket.getLength());
-                inputHandler.refreshHandlerWithInput(inputData, inputAddress);
+                inputHandler.refreshHandlerWithInput(inputData, (InetSocketAddress) inputPacket.getSocketAddress());
                 inputData.clear();
             }
         } catch (Exception e) {
+            e.printStackTrace();
         } finally {
+            System.out.println("Closing socket");
             inputSocket.close();
         }
     }

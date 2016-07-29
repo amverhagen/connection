@@ -1,6 +1,5 @@
 package com.andrew.verhagen.connection;
 
-import com.andrew.verhagen.connection.server.Client;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -11,13 +10,11 @@ public class ConnectionGame extends ApplicationAdapter {
     SpriteBatch batch;
     Texture img;
     float spritePosition;
-    Client client;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
         img = new Texture("badlogic.jpg");
-        client = new Client();
     }
 
     @Override

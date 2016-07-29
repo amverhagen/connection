@@ -1,4 +1,4 @@
-package com.andrew.verhagen.connection.server;
+package com.andrew.verhagen.connection.room;
 
 public class ConnectionStates {
     public static final byte WAITING_FOR_OPPONENT = 1;

@@ -18,6 +18,9 @@ class CenterOutputWorker extends Thread {
         try {
             while (true) {
                 outputHandler.sendOutputData(socket);
+                if (socket.isClosed())
+                    break;
+                System.out.println("Sending output");
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
@@ -25,7 +28,7 @@ class CenterOutputWorker extends Thread {
                 }
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         } finally {
             socket.close();
         }

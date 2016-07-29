@@ -1,7 +1,13 @@
 package com.andrew.verhagen.connection.server;
 
+import com.andrew.verhagen.connection.center.ConnectionCenter;
+import com.andrew.verhagen.connection.room.RoomConnectionHandler;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 public class GameServer {
@@ -10,37 +16,60 @@ public class GameServer {
     private static final int MAX_ROOMS = 100;
     private DatagramSocket listeningSocket;
     private DatagramPacket inputPacket;
-    private ArrayList<RoomConnection> roomConnections;
+    private ByteBuffer inputData;
+    private ArrayList<ConnectionCenter> connectionCenters;
 
     public GameServer() {
-        roomConnections = new ArrayList<RoomConnection>();
-        inputPacket = new DatagramPacket(new byte[4], 4);
+        connectionCenters = new ArrayList<ConnectionCenter>();
+        inputData = ByteBuffer.allocate(4);
+        inputPacket = new DatagramPacket(inputData.array(), inputData.capacity());
         try {
             listeningSocket = new DatagramSocket(9001);
+            findConnection:
             while (true) {
-                boolean createNewRoom = true;
-                System.out.println("Listening for game players");
+                System.out.println("Listening for game players.");
                 listeningSocket.receive(inputPacket);
+                System.out.println("Package received.");
 
-                for (RoomConnection roomConnection : roomConnections) {
-                    if (roomConnection.needsPlayer()) {
-                        roomConnection.addPlayer(inputPacket.getAddress(), inputPacket.getPort());
-                        createNewRoom = false;
-                        break;
-                    }
+                if (!validInput())
+                    continue findConnection;
+                System.out.println("Package has valid input.");
+
+                InetSocketAddress incomingAddress = (InetSocketAddress) inputPacket.getSocketAddress();
+
+                for (ConnectionCenter connectionCenter : connectionCenters) {
+                    if (connectionCenter.holdingConnection(incomingAddress))
+                        continue findConnection;
+                }
+                System.out.println("Package is not already held.");
+
+                for (ConnectionCenter connectionCenter : connectionCenters) {
+                    if (connectionCenter.addAddress(incomingAddress))
+                        continue findConnection;
+                }
+                System.out.println("No open rooms. Creating new room.");
+
+                if (connectionCenters.size() < MAX_ROOMS) {
+                    ConnectionCenter connectionCenter = new ConnectionCenter(new RoomConnectionHandler(256, 2, 2000));
+                    connectionCenters.add(connectionCenter);
+                    connectionCenter.addAddress(incomingAddress);
+                    System.out.println("Created new room");
                 }
 
-                if (createNewRoom && roomConnections.size() != MAX_ROOMS) {
-                    RoomConnection roomConnection = new RoomConnection();
-                    roomConnection.addPlayer(inputPacket.getAddress(), inputPacket.getPort());
-                    roomConnections.add(roomConnection);
-                }
             }
         } catch (java.io.IOException e) {
             e.printStackTrace();
         } finally {
             listeningSocket.close();
         }
+    }
+
+    private boolean validInput() throws BufferUnderflowException {
+        inputData.limit(inputPacket.getLength());
+        inputData.position(0);
+        boolean valid = inputData.getInt() == GameServer.PACKET_HEADER;
+        inputData.clear();
+        return valid;
     }
 
     public static void main(String[] args) {
