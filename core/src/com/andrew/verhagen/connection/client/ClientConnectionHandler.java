@@ -57,7 +57,8 @@ public class ClientConnectionHandler extends ConnectionCenterHandler {
 
     @Override
     protected void handleNewInput(ByteBuffer inputData, InetSocketAddress inputAddress) {
-        System.out.println("Client received data");
-        //Set last input time.
+        long receptionTime = System.nanoTime();
+        if (serverConnection.hasSameAddressAndPort(inputAddress))
+            serverConnection.timeOfLastInput = receptionTime;
     }
 }

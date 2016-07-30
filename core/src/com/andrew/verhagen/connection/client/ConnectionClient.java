@@ -20,6 +20,7 @@ public class ConnectionClient {
     private ByteBuffer inputData;
     private InetAddress serverAddress;
     private int serverPort;
+    public boolean connected;
 
     public ConnectionClient() {
         handler = new ClientConnectionHandler(256, 1, 2000);
@@ -30,6 +31,7 @@ public class ConnectionClient {
 
     public void connectToServer() {
         try {
+            connected = true;
             serverAddress = InetAddress.getByName("192.168.0.4");
             socket = new DatagramSocket();
             socket.setSoTimeout(2000);
@@ -37,6 +39,7 @@ public class ConnectionClient {
                 connectionCenter = new ConnectionCenter(handler, socket, (InetSocketAddress) packet.getSocketAddress());
             } else {
                 System.out.println("Failed to connect to server");
+                connected = false;
             }
         } catch (IOException e) {
             e.printStackTrace();
