@@ -1,11 +1,13 @@
 package com.andrew.verhagen.line.gambit;
 
-import com.andrew.verhagen.line.gambit.game.Assets;
-import com.andrew.verhagen.line.gambit.game.ScreenManager;
+import com.andrew.verhagen.line.gambit.gameutils.Assets;
+import com.andrew.verhagen.line.gambit.gameutils.GameColors;
+import com.andrew.verhagen.line.gambit.gameutils.ScreenManager;
 import com.andrew.verhagen.line.gambit.screens.LoadingScreen;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -20,9 +22,11 @@ public class GambitGame extends Game {
     public Camera uiCamera;
     public Viewport uiViewport;
     public ScreenManager screenManager;
+    public Color gameColor;
 
     @Override
     public void create() {
+        gameColor = GameColors.WHITE;
         assets = new Assets();
         uiCamera = new OrthographicCamera();
         uiViewport = new FitViewport(UI_WIDTH, UI_HEIGHT, uiCamera);
@@ -34,6 +38,7 @@ public class GambitGame extends Game {
     @Override
     public void resize(int width, int height) {
         uiViewport.update(width, height);
+        super.resize(width, height);
     }
 
     @Override
@@ -45,7 +50,14 @@ public class GambitGame extends Game {
 
     @Override
     public void dispose() {
+        super.dispose();
         screenManager.dispose();
         assets.manager.dispose();
+    }
+
+    public void setGameColor(float r, float g, float b) {
+        gameColor.r = r;
+        gameColor.g = g;
+        gameColor.b = b;
     }
 }

@@ -1,4 +1,4 @@
-package com.andrew.verhagen.line.gambit.game;
+package com.andrew.verhagen.line.gambit.gameutils;
 
 import com.andrew.verhagen.line.gambit.GambitGame;
 import com.andrew.verhagen.line.gambit.screens.HomeScreen;
@@ -6,6 +6,7 @@ import com.andrew.verhagen.line.gambit.screens.HomeScreen;
 import java.util.ArrayList;
 
 import com.andrew.verhagen.line.gambit.screens.LoadingScreen;
+import com.andrew.verhagen.line.gambit.screens.MultiplayerScreen;
 import com.andrew.verhagen.line.gambit.screens.PlayScreen;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.utils.Disposable;
@@ -25,6 +26,7 @@ public class ScreenManager implements Disposable {
         gameScreens.add(new HomeScreen(gameInstance));
         gameScreens.add(new LoadingScreen(gameInstance));
         gameScreens.add(new PlayScreen(gameInstance));
+        gameScreens.add(new MultiplayerScreen(gameInstance));
     }
 
     public void setScreen(Class<? extends Screen> screen) {

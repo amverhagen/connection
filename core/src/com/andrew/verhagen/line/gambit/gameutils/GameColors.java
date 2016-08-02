@@ -1,4 +1,4 @@
-package com.andrew.verhagen.line.gambit.game;
+package com.andrew.verhagen.line.gambit.gameutils;
 
 import com.badlogic.gdx.graphics.Color;
 

@@ -7,6 +7,7 @@ import com.andrew.verhagen.line.gambit.components.positional.Position;
 import com.artemis.Aspect;
 import com.artemis.ComponentMapper;
 import com.artemis.systems.IteratingSystem;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -21,12 +22,16 @@ public class RenderSystem extends IteratingSystem {
 
     private GambitGame gameInstance;
     private SpriteBatch batch;
+    private Camera camera;
 
-    public RenderSystem(GambitGame gameInstance) {
-        super(Aspect.all(Position.class, Bounds.class, Renderable.class));
+    public RenderSystem(GambitGame gameInstance, Camera camera, Aspect.Builder aspect) {
+        super(aspect.all(Position.class, Bounds.class, Renderable.class));
         this.gameInstance = gameInstance;
+        this.camera = camera;
         this.batch = new SpriteBatch();
     }
+
+
 
     @Override
     protected void inserted(int entityId) {
@@ -37,7 +42,7 @@ public class RenderSystem extends IteratingSystem {
 
     @Override
     protected void begin() {
-        batch.setProjectionMatrix(gameInstance.uiCamera.combined);
+        batch.setProjectionMatrix(camera.combined);
         batch.begin();
     }
 

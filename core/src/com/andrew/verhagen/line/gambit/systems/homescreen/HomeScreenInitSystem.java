@@ -5,8 +5,8 @@ import com.andrew.verhagen.line.gambit.components.graphics.Renderable;
 import com.andrew.verhagen.line.gambit.components.home.ManagedColor;
 import com.andrew.verhagen.line.gambit.components.movement.MoveToPoint;
 import com.andrew.verhagen.line.gambit.components.movement.MovementSpeed;
-import com.andrew.verhagen.line.gambit.game.Assets;
-import com.andrew.verhagen.line.gambit.game.GameColors;
+import com.andrew.verhagen.line.gambit.gameutils.Assets;
+import com.andrew.verhagen.line.gambit.gameutils.GameColors;
 import com.artemis.BaseSystem;
 import com.artemis.ComponentMapper;
 
@@ -46,17 +46,17 @@ public class HomeScreenInitSystem extends BaseSystem {
 
 
     private void createPlayButtons() {
-        //Create one player button.
-        entityFactory.createManagedColorRenderable(
+        int onePlayer = entityFactory.createButton(
                 (GambitGame.UI_WIDTH * 0.45f) - buttonWidth, GambitGame.UI_HEIGHT * 0.2f,
                 buttonWidth, buttonHeight,
-                Assets.onePlayerButton);
+                Assets.onePlayerButton, HomeTouchSystem.changeToSinglePlayer);
+        managedColorComponentMapper.create(onePlayer);
 
-        //Create two player button.
-        entityFactory.createManagedColorRenderable(
+        int multiPlayer = entityFactory.createButton(
                 (GambitGame.UI_WIDTH * 0.55f), GambitGame.UI_HEIGHT * 0.2f,
                 buttonWidth, buttonHeight,
-                Assets.twoPlayerButton);
+                Assets.twoPlayerButton, HomeTouchSystem.changeToMultiplayerScreen);
+        managedColorComponentMapper.create(multiPlayer);
     }
 
     private void createOptionsIcon() {

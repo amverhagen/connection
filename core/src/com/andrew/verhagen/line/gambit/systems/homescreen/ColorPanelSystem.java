@@ -5,7 +5,7 @@ import com.andrew.verhagen.line.gambit.components.graphics.Renderable;
 import com.andrew.verhagen.line.gambit.components.home.Panel;
 import com.andrew.verhagen.line.gambit.components.movement.MoveToPoint;
 import com.andrew.verhagen.line.gambit.components.movement.MovementSpeed;
-import com.andrew.verhagen.line.gambit.game.Assets;
+import com.andrew.verhagen.line.gambit.gameutils.Assets;
 import com.artemis.Aspect;
 import com.artemis.BaseEntitySystem;
 import com.artemis.ComponentMapper;

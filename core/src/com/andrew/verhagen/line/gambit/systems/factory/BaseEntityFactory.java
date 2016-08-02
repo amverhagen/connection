@@ -1,5 +1,6 @@
 package com.andrew.verhagen.line.gambit.systems.factory;
 
+import com.andrew.verhagen.line.gambit.components.game.Collidable;
 import com.andrew.verhagen.line.gambit.components.graphics.Renderable;
 import com.andrew.verhagen.line.gambit.components.input.Touchable;
 import com.andrew.verhagen.line.gambit.components.positional.Bounds;
@@ -13,6 +14,7 @@ public abstract class BaseEntityFactory extends BaseSystem {
     public static final String boundedBox = "bounded_box";
     public static final String renderable = "renderable";
     public static final String button = "button";
+    public static final String COLLIDABLE = "collidable";
     private ComponentMapper<Position> positionComponentMapper;
     private ComponentMapper<Bounds> boundsComponentMapper;
     private ComponentMapper<Renderable> renderableComponentMapper;
@@ -28,6 +30,7 @@ public abstract class BaseEntityFactory extends BaseSystem {
         archetypeHolder.createArchetype(boundedBox, Position.class, Bounds.class);
         archetypeHolder.createArchetype(renderable, boundedBox, Renderable.class);
         archetypeHolder.createArchetype(button, renderable, Touchable.class);
+        archetypeHolder.createArchetype(COLLIDABLE, renderable, Collidable.class);
         createCustomArchetypes();
     }
 
