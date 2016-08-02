@@ -11,7 +11,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-public class LineGambitGame extends Game {
+public class GambitGame extends Game {
 
     public static final int UI_WIDTH = 1920;
     public static final int UI_HEIGHT = 1080;
@@ -45,6 +45,7 @@ public class LineGambitGame extends Game {
 
     @Override
     public void dispose() {
+        screenManager.dispose();
         assets.manager.dispose();
     }
 }

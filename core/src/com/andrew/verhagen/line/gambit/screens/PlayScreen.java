@@ -1,13 +1,13 @@
 package com.andrew.verhagen.line.gambit.screens;
 
-import com.andrew.verhagen.line.gambit.LineGambitGame;
+import com.andrew.verhagen.line.gambit.GambitGame;
 import com.badlogic.gdx.Screen;
 
 public class PlayScreen implements Screen {
 
-    private final LineGambitGame gameInstance;
+    private final GambitGame gameInstance;
 
-    public PlayScreen(LineGambitGame gambitGame) {
+    public PlayScreen(GambitGame gambitGame) {
         this.gameInstance = gambitGame;
     }
 

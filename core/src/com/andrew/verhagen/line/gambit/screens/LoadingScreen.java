@@ -1,6 +1,6 @@
 package com.andrew.verhagen.line.gambit.screens;
 
-import com.andrew.verhagen.line.gambit.LineGambitGame;
+import com.andrew.verhagen.line.gambit.GambitGame;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -8,10 +8,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class LoadingScreen implements Screen {
 
     private SpriteBatch batch;
-    private final LineGambitGame gameInstance;
+    private final GambitGame gameInstance;
     private BitmapFont font;
 
-    public LoadingScreen(LineGambitGame gambitGame) {
+    public LoadingScreen(GambitGame gambitGame) {
         this.gameInstance = gambitGame;
         this.batch = new SpriteBatch();
     }

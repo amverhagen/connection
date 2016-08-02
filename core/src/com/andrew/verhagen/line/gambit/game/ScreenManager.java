@@ -1,21 +1,21 @@
 package com.andrew.verhagen.line.gambit.game;
 
-import com.andrew.verhagen.line.gambit.LineGambitGame;
+import com.andrew.verhagen.line.gambit.GambitGame;
 import com.andrew.verhagen.line.gambit.screens.HomeScreen;
 
 import java.util.ArrayList;
 
 import com.andrew.verhagen.line.gambit.screens.LoadingScreen;
 import com.andrew.verhagen.line.gambit.screens.PlayScreen;
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.utils.Disposable;
 
-public class ScreenManager {
+public class ScreenManager implements Disposable {
 
     private final ArrayList<Screen> gameScreens;
-    private final LineGambitGame gameInstance;
+    private final GambitGame gameInstance;
 
-    public ScreenManager(LineGambitGame gameInstance) {
+    public ScreenManager(GambitGame gameInstance) {
         this.gameScreens = new ArrayList<Screen>();
         this.gameInstance = gameInstance;
         this.initializeScreens();
@@ -32,6 +32,13 @@ public class ScreenManager {
             if (gameScreen.getClass().equals(screen)) {
                 gameInstance.setScreen(gameScreen);
             }
+        }
+    }
+
+    @Override
+    public void dispose() {
+        for (Screen gameScreen : gameScreens) {
+            gameScreen.dispose();
         }
     }
 }

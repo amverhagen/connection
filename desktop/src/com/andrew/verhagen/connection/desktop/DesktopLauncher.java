@@ -1,6 +1,6 @@
 package com.andrew.verhagen.connection.desktop;
 
-import com.andrew.verhagen.line.gambit.LineGambitGame;
+import com.andrew.verhagen.line.gambit.GambitGame;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 
@@ -9,6 +9,6 @@ public class DesktopLauncher {
         LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
         config.height = 540;
         config.width = 960;
-        new LwjglApplication(new LineGambitGame(), config);
+        new LwjglApplication(new GambitGame(), config);
     }
 }
