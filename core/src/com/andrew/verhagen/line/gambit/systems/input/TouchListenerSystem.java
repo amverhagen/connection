@@ -23,7 +23,6 @@ public abstract class TouchListenerSystem extends IteratingSystem implements Inp
     private ComponentMapper<Touchable> touchableComponentMapper;
     private Touchable entityTouch;
 
-    private boolean continueTouch;
     private Viewport viewport;
     private Vector2 touchPoint;
     private TouchEvent currentTouchEvent;
@@ -75,7 +74,6 @@ public abstract class TouchListenerSystem extends IteratingSystem implements Inp
         touchPoint.set(screenX, screenY);
         viewport.unproject(touchPoint);
         this.setEnabled(true);
-        this.continueTouch = true;
         return true;
     }
 

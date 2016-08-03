@@ -1,13 +1,16 @@
 package com.andrew.verhagen.line.gambit.systems.multiplayerscreen;
 
 import com.andrew.verhagen.line.gambit.components.player.Block;
+import com.andrew.verhagen.line.gambit.components.player.Direction;
 import com.andrew.verhagen.line.gambit.screens.MultiplayerScreen;
 import com.artemis.Aspect;
 import com.artemis.BaseEntitySystem;
+import com.badlogic.gdx.math.Vector2;
 
 public class BlockSystem extends BaseEntitySystem {
 
     private MultiplayerEntityFactory entityFactory;
+    private MovementPointSystem movementPointSystem;
 
     private static final float BLOCK_SIDE_LENGTH = MultiplayerScreen.GAME_WORLD_WIDTH * 0.05f;
     private final SpawnLocation playerSpawnLocation;
@@ -20,14 +23,16 @@ public class BlockSystem extends BaseEntitySystem {
 
     @Override
     protected void initialize() {
+        Vector2 bottomLeftSpawnPoint = movementPointSystem.getBottomLeftSpawnPoint();
+        Vector2 topRightSpawnPoint = movementPointSystem.getTopRightSpawnPoint();
+
         if (this.playerSpawnLocation == SpawnLocation.LEFT) {
-            entityFactory.createPlayer(SpawnLocation.LEFT.xSpawnLocation, SpawnLocation.LEFT.ySpawnLocation, BLOCK_SIDE_LENGTH, BLOCK_SIDE_LENGTH);
-            entityFactory.createOpponent(SpawnLocation.RIGHT.xSpawnLocation, SpawnLocation.RIGHT.ySpawnLocation, BLOCK_SIDE_LENGTH, BLOCK_SIDE_LENGTH);
+            entityFactory.createPlayer((int) bottomLeftSpawnPoint.x, (int) bottomLeftSpawnPoint.y, BLOCK_SIDE_LENGTH, BLOCK_SIDE_LENGTH, Direction.RIGHT);
+            entityFactory.createOpponent((int) topRightSpawnPoint.x, (int) topRightSpawnPoint.y, BLOCK_SIDE_LENGTH, BLOCK_SIDE_LENGTH, Direction.LEFT);
 
         } else {
-            entityFactory.createPlayer(SpawnLocation.RIGHT.xSpawnLocation, SpawnLocation.RIGHT.ySpawnLocation, BLOCK_SIDE_LENGTH, BLOCK_SIDE_LENGTH);
-            entityFactory.createOpponent(SpawnLocation.LEFT.xSpawnLocation, SpawnLocation.LEFT.ySpawnLocation, BLOCK_SIDE_LENGTH, BLOCK_SIDE_LENGTH);
-
+            entityFactory.createPlayer((int) topRightSpawnPoint.x, (int) topRightSpawnPoint.y, BLOCK_SIDE_LENGTH, BLOCK_SIDE_LENGTH, Direction.LEFT);
+            entityFactory.createOpponent((int) bottomLeftSpawnPoint.x, (int) bottomLeftSpawnPoint.y, BLOCK_SIDE_LENGTH, BLOCK_SIDE_LENGTH, Direction.RIGHT);
         }
     }
 
@@ -37,19 +42,7 @@ public class BlockSystem extends BaseEntitySystem {
     }
 
     public enum SpawnLocation {
-        LEFT(
-                MultiplayerWallSystem.WALL_START_X + MultiplayerWallSystem.WALL_THICKNESS + BLOCK_SIDE_LENGTH,
-                MultiplayerWallSystem.WALL_START_Y + MultiplayerWallSystem.WALL_THICKNESS + BLOCK_SIDE_LENGTH),
-        RIGHT(
-                MultiplayerWallSystem.WALL_START_X + MultiplayerWallSystem.HORIZONTAL_WALL_WIDTH - (MultiplayerWallSystem.WALL_THICKNESS + BLOCK_SIDE_LENGTH * 2),
-                MultiplayerWallSystem.WALL_START_Y + MultiplayerWallSystem.VERTICAL_WALL_HEIGHT - (MultiplayerWallSystem.WALL_THICKNESS + BLOCK_SIDE_LENGTH * 2));
-
-        final float xSpawnLocation;
-        final float ySpawnLocation;
-
-        SpawnLocation(float xSpawnLocation, float ySpawnLocation) {
-            this.xSpawnLocation = xSpawnLocation;
-            this.ySpawnLocation = ySpawnLocation;
-        }
+        LEFT,
+        RIGHT;
     }
 }

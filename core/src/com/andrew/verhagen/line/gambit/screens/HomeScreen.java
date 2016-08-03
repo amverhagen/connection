@@ -36,7 +36,7 @@ public class HomeScreen implements Screen {
             worldConfiguration.setSystem(ColorPanelSystem.class);
             worldConfiguration.setSystem(MoveToPointSystem.class);
             worldConfiguration.setSystem(RelativePositionSystem.class);
-            worldConfiguration.setSystem(new RenderSystem(gameInstance,gameInstance.uiCamera, Aspect.all()));
+            worldConfiguration.setSystem(new RenderSystem(gameInstance, gameInstance.uiCamera, Aspect.all()));
             homeWorld = new World(worldConfiguration);
         }
     }
@@ -51,7 +51,6 @@ public class HomeScreen implements Screen {
     public void render(float delta) {
         homeWorld.setDelta(delta);
         homeWorld.process();
-        Gdx.app.log("HomeScreen", "render finished");
     }
 
     @Override

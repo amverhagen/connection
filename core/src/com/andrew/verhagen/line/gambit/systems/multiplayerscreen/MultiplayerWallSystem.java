@@ -10,8 +10,6 @@ public class MultiplayerWallSystem extends BaseEntitySystem {
     private MultiplayerEntityFactory entityFactory;
 
     public static final float WALL_THICKNESS = 10f;
-    public static final float WALL_START_X = 0;
-    public static final float WALL_START_Y = 0;
     public static final float VERTICAL_WALL_HEIGHT = MultiplayerScreen.GAME_WORLD_HEIGHT;
     public static final float HORIZONTAL_WALL_WIDTH = MultiplayerScreen.GAME_WORLD_WIDTH;
 

@@ -18,6 +18,7 @@ public class Assets {
     public static final String twoPlayerButton = "images/two-player-button.png";
     public static final String gambitTittle = "images/gambit-title.png";
     public static final String musicIcon = "images/music-icon.png";
+    public static final String clear = "images/clear.png";
 
     public AssetManager manager;
 
@@ -36,6 +37,7 @@ public class Assets {
         this.manager.load(twoPlayerButton, Texture.class);
         this.manager.load(gambitTittle, Texture.class);
         this.manager.load(musicIcon, Texture.class);
+        this.manager.load(clear, Texture.class);
     }
 
     /**
