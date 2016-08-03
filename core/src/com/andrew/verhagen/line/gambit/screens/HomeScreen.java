@@ -55,22 +55,22 @@ public class HomeScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-
+        System.out.println("resized");
     }
 
     @Override
     public void pause() {
-
+        System.out.println("paused");
     }
 
     @Override
     public void resume() {
-
+        System.out.println("resume");
     }
 
     @Override
     public void hide() {
-
+        System.out.println("hidden");
     }
 
     @Override

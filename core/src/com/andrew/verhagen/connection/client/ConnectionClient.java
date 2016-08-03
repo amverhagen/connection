@@ -1,87 +1,95 @@
 package com.andrew.verhagen.connection.client;
 
 import com.andrew.verhagen.connection.center.ConnectionCenter;
+import com.andrew.verhagen.connection.room.ConnectionState;
 import com.andrew.verhagen.connection.server.GameServer;
+import com.andrew.verhagen.line.gambit.network.Protocol;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.BufferUnderflowException;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 
 public class ConnectionClient {
 
-    private ConnectionCenter connectionCenter;
+    private ConnectionState connectionState;
     private ClientConnectionHandler handler;
     private DatagramSocket socket;
-    private DatagramPacket packet;
-    private ByteBuffer inputData;
     private InetAddress serverAddress;
     private int serverPort;
-    public boolean connected;
 
-    public ConnectionClient() {
-        handler = new ClientConnectionHandler(256, 1, 2000);
-        inputData = ByteBuffer.allocate(4);
-        packet = new DatagramPacket(inputData.array(), 0, inputData.capacity());
-        serverPort = 9001;
+    public ConnectionClient(InetAddress serverAddress, int serverPort) {
+        this.connectionState = ConnectionState.NOT_CONNECTED;
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
     }
 
     public void connectToServer() {
-        try {
-            connected = true;
-            serverAddress = InetAddress.getByName("192.168.0.4");
-            socket = new DatagramSocket();
-            socket.setSoTimeout(2000);
-            if (establishConnection()) {
-                connectionCenter = new ConnectionCenter(handler, socket, (InetSocketAddress) packet.getSocketAddress());
-            } else {
-                System.out.println("Failed to connect to server");
-                connected = false;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            socket.close();
+        if (getConnectionState() == ConnectionState.NOT_CONNECTED) {
+            establishConnection();
         }
     }
 
-    private boolean establishConnection() {
-        boolean packetReceived = false;
-        for (int i = 0; i < 10; i++) {
-            try {
-                packageOutput();
-                socket.send(packet);
-                socket.receive(packet);
-                if (validInput()) {
-                    packetReceived = true;
-                    break;
+    private void establishConnection() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ByteBuffer serverData = ByteBuffer.allocate(4);
+                DatagramPacket serverPacket = new DatagramPacket(serverData.array(), 0, serverData.capacity());
+                try {
+                    endClientConnection();
+                    socket = new DatagramSocket();
+                    socket.setSoTimeout(2000);
+                    for (int i = 0; i < 10; i++) {
+                        setConnectionState(ConnectionState.CONNECTING);
+                        packageOutput(serverData, serverPacket);
+                        try {
+                            socket.send(serverPacket);
+                            socket.receive(serverPacket);
+                            if (Protocol.validInput(serverData)) {
+                                setConnectionState(ConnectionState.CONNECTED);
+                                handler = new ClientConnectionHandler(256, 1, 2000);
+                                new ConnectionCenter(handler, socket, (InetSocketAddress) serverPacket.getSocketAddress());
+                                return;
+                            }
+                        } catch (SocketTimeoutException ste) {
+                            System.out.println("Connection timed out, retrying");
+                        }
+                    }
+                } catch (IOException e) {
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+                endClientConnection();
             }
+        }).start();
+    }
+
+    //TODO create request protocol.
+    private void packageOutput(ByteBuffer outputData, DatagramPacket outputPacket) {
+        outputPacket.setAddress(serverAddress);
+        outputPacket.setPort(serverPort);
+        outputData.clear();
+        outputData.putInt(GameServer.PACKET_HEADER);
+    }
+
+    private void setConnectionState(ConnectionState connectionState) {
+        synchronized (connectionState) {
+            this.connectionState = connectionState;
         }
-        return packetReceived;
     }
 
-    private void packageOutput() {
-        packet.setAddress(serverAddress);
-        packet.setPort(serverPort);
-        inputData.clear();
-        inputData.putInt(GameServer.PACKET_HEADER);
+    public ConnectionState getConnectionState() {
+        synchronized (connectionState) {
+            return connectionState;
+        }
     }
 
-    private boolean validInput() throws BufferUnderflowException {
-        inputData.limit(packet.getLength());
-        inputData.position(0);
-        boolean valid = inputData.getInt() == GameServer.PACKET_HEADER;
-        inputData.clear();
-        return valid;
-    }
-
-    public static void main(String[] args) {
-        ConnectionClient cc = new ConnectionClient();
-        cc.connectToServer();
+    public synchronized void endClientConnection() {
+        this.setConnectionState(ConnectionState.FAILED);
+        if (socket != null)
+            socket.close();
+        System.out.println("Connection ended");
     }
 }

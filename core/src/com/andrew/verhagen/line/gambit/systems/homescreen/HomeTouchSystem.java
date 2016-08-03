@@ -3,6 +3,7 @@ package com.andrew.verhagen.line.gambit.systems.homescreen;
 import com.andrew.verhagen.line.gambit.GambitGame;
 import com.andrew.verhagen.line.gambit.components.graphics.Renderable;
 import com.andrew.verhagen.line.gambit.components.input.TouchEvent;
+import com.andrew.verhagen.line.gambit.screens.MatchMakingScreen;
 import com.andrew.verhagen.line.gambit.screens.MultiplayerScreen;
 import com.andrew.verhagen.line.gambit.systems.input.TouchListenerSystem;
 import com.artemis.World;
@@ -68,7 +69,7 @@ public class HomeTouchSystem extends TouchListenerSystem {
         TouchEvent changeToMultiplayerScreenEvent = new TouchEvent() {
             @Override
             public boolean touched(World world, int id, float touchX, float touchY) {
-                gameInstance.screenManager.setScreen(MultiplayerScreen.class);
+                gameInstance.screenManager.setScreen(MatchMakingScreen.class);
                 return true;
             }
         };

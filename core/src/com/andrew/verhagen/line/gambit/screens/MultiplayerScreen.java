@@ -5,6 +5,7 @@ import com.andrew.verhagen.line.gambit.systems.graphics.ColorManagerSystem;
 import com.andrew.verhagen.line.gambit.systems.multiplayerscreen.BlockMovementSystem;
 import com.andrew.verhagen.line.gambit.systems.multiplayerscreen.BlockSystem;
 import com.andrew.verhagen.line.gambit.systems.multiplayerscreen.GameRenderSystem;
+import com.andrew.verhagen.line.gambit.systems.multiplayerscreen.InputTrackingSystem;
 import com.andrew.verhagen.line.gambit.systems.multiplayerscreen.MovementPointSystem;
 import com.andrew.verhagen.line.gambit.systems.multiplayerscreen.MultiplayerEntityFactory;
 import com.andrew.verhagen.line.gambit.systems.multiplayerscreen.MultiplayerTouchSystem;
@@ -45,6 +46,7 @@ public class MultiplayerScreen implements Screen {
             MultiplayerTouchSystem multiplayerTouchSystem = new MultiplayerTouchSystem(gameViewport, gameInstance);
             worldConfiguration.setSystem(multiplayerTouchSystem);
             this.inputProcessor = multiplayerTouchSystem;
+            worldConfiguration.setSystem(new InputTrackingSystem(15));
             worldConfiguration.setSystem(PlayerMovementSystem.class);
             worldConfiguration.setSystem(OpponentMovementSystem.class);
             worldConfiguration.setSystem(MultiplayerWallSystem.class);

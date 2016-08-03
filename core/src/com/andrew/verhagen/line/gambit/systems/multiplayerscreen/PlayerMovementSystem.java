@@ -1,5 +1,6 @@
 package com.andrew.verhagen.line.gambit.systems.multiplayerscreen;
 
+import com.andrew.verhagen.connection.server.Input;
 import com.andrew.verhagen.line.gambit.components.player.Direction;
 import com.andrew.verhagen.line.gambit.components.player.MovementDirection;
 import com.andrew.verhagen.line.gambit.components.player.Player;
@@ -11,6 +12,7 @@ public class PlayerMovementSystem extends IteratingSystem {
 
     private OpponentMovementSystem opponentMovementSystem;
     private ComponentMapper<MovementDirection> movementDirectionComponentMapper;
+    private InputTrackingSystem inputTrackingSystem;
     private MovementDirection playerDirection;
     private boolean movementSet;
     private boolean moveLeft = false;
@@ -28,11 +30,13 @@ public class PlayerMovementSystem extends IteratingSystem {
             if (moveLeft) {
                 playerDirection.nextDirection = Direction.getLeft(playerDirection.direction);
                 //network.setnextinput(left)
+                inputTrackingSystem.addInput(Input.LEFT);
                 opponentMovementSystem.moveLeft();
                 movementSet = true;
             } else if (moveRight) {
                 playerDirection.nextDirection = Direction.getRight(playerDirection.direction);
                 //network.setnextinput(right)
+                inputTrackingSystem.addInput(Input.RIGHT);
                 opponentMovementSystem.moveRight();
                 movementSet = true;
             }
@@ -48,6 +52,9 @@ public class PlayerMovementSystem extends IteratingSystem {
     }
 
     public void freeInput() {
+        if (!movementSet) {
+            inputTrackingSystem.addInput(Input.NO_INPUT);
+        }
         movementSet = false;
         moveLeft = false;
         moveRight = false;
