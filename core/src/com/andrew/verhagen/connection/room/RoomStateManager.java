@@ -1,7 +1,8 @@
 package com.andrew.verhagen.connection.room;
 
+import com.andrew.verhagen.connection.protocol.Protocol;
 import com.andrew.verhagen.connection.server.GameServer;
-import com.andrew.verhagen.connection.server.Input;
+import com.andrew.verhagen.connection.protocol.Input;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -22,7 +23,7 @@ public class RoomStateManager {
 
     public boolean handleInputPlayerOne(ByteBuffer inputData) {
         try {
-            if (inputData.getInt() == GameServer.PACKET_HEADER) {
+            if (Protocol.validHeader(inputData)) {
                 int playerOneIncomingInputSequenceNumber = inputData.getInt();
                 System.out.format("Received input sequence %d \n", playerOneIncomingInputSequenceNumber);
                 if (playerOneIncomingInputSequenceNumber < playerOneLatestSequence || playerOneIncomingInputSequenceNumber - 15 > latestCommonSequence) {
@@ -65,7 +66,6 @@ public class RoomStateManager {
     }
 
     public void setOutputData(ByteBuffer outputData) {
-        outputData.clear();
-        outputData.putInt(GameServer.PACKET_HEADER);
+        Protocol.packageHeader(outputData);
     }
 }

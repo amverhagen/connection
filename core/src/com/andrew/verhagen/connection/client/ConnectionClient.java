@@ -1,9 +1,9 @@
 package com.andrew.verhagen.connection.client;
 
 import com.andrew.verhagen.connection.center.ConnectionCenter;
+import com.andrew.verhagen.connection.protocol.Protocol;
 import com.andrew.verhagen.connection.room.ConnectionState;
-import com.andrew.verhagen.connection.server.GameServer;
-import com.andrew.verhagen.line.gambit.network.Protocol;
+import com.andrew.verhagen.line.gambit.systems.matchmaking.ConnectionObserver;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -11,7 +11,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 public class ConnectionClient {
 
@@ -19,37 +21,43 @@ public class ConnectionClient {
     private ClientConnectionHandler handler;
     private DatagramSocket socket;
     private InetAddress serverAddress;
-    private int serverPort;
+    private static final String SERVER_ADDRESS = "192.168.0.4";
+    private static final int SERVER_PORT = 9001;
+    private ArrayList<ConnectionObserver> connectionObservers;
 
-    public ConnectionClient(InetAddress serverAddress, int serverPort) {
+
+    public ConnectionClient() {
         this.connectionState = ConnectionState.NOT_CONNECTED;
-        this.serverAddress = serverAddress;
-        this.serverPort = serverPort;
+        try {
+            this.serverAddress = InetAddress.getByName(SERVER_ADDRESS);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        connectionObservers = new ArrayList<ConnectionObserver>();
     }
 
     public void connectToServer() {
-        if (getConnectionState() == ConnectionState.NOT_CONNECTED) {
-            establishConnection();
-        }
+        endClientConnection();
+        establishConnection();
     }
 
     private void establishConnection() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ByteBuffer serverData = ByteBuffer.allocate(4);
+                ByteBuffer serverData = ByteBuffer.allocate(8);
                 DatagramPacket serverPacket = new DatagramPacket(serverData.array(), 0, serverData.capacity());
                 try {
                     endClientConnection();
                     socket = new DatagramSocket();
                     socket.setSoTimeout(2000);
-                    for (int i = 0; i < 10; i++) {
+                    for (int i = 0; i < 5; i++) {
                         setConnectionState(ConnectionState.CONNECTING);
                         packageOutput(serverData, serverPacket);
                         try {
                             socket.send(serverPacket);
                             socket.receive(serverPacket);
-                            if (Protocol.validInput(serverData)) {
+                            if (Protocol.validRoomResponse(serverData)) {
                                 setConnectionState(ConnectionState.CONNECTED);
                                 handler = new ClientConnectionHandler(256, 1, 2000);
                                 new ConnectionCenter(handler, socket, (InetSocketAddress) serverPacket.getSocketAddress());
@@ -66,17 +74,22 @@ public class ConnectionClient {
         }).start();
     }
 
-    //TODO create request protocol.
     private void packageOutput(ByteBuffer outputData, DatagramPacket outputPacket) {
         outputPacket.setAddress(serverAddress);
-        outputPacket.setPort(serverPort);
-        outputData.clear();
-        outputData.putInt(GameServer.PACKET_HEADER);
+        outputPacket.setPort(SERVER_PORT);
+        Protocol.packageRoomRequest(outputData);
+    }
+
+    public void addObserver(ConnectionObserver observer) {
+        this.connectionObservers.add(observer);
     }
 
     private void setConnectionState(ConnectionState connectionState) {
         synchronized (connectionState) {
             this.connectionState = connectionState;
+            for (ConnectionObserver observer : connectionObservers) {
+                observer.connectionChange(connectionState);
+            }
         }
     }
 

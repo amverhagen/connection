@@ -1,18 +1,18 @@
 package com.andrew.verhagen.connection.server;
 
 import com.andrew.verhagen.connection.center.ConnectionCenter;
+import com.andrew.verhagen.connection.protocol.Protocol;
 import com.andrew.verhagen.connection.room.RoomConnectionHandler;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 public class GameServer {
 
-    public static final int PACKET_HEADER = 12312;
     private static final int MAX_ROOMS = 100;
     private DatagramSocket listeningSocket;
     private DatagramPacket inputPacket;
@@ -20,19 +20,53 @@ public class GameServer {
     private ArrayList<ConnectionCenter> connectionCenters;
 
     public GameServer() {
-        connectionCenters = new ArrayList<ConnectionCenter>();
-        inputData = ByteBuffer.allocate(4);
+        inputData = ByteBuffer.allocate(8);
         inputPacket = new DatagramPacket(inputData.array(), inputData.capacity());
+        connectionCenters = new ArrayList<ConnectionCenter>();
+    }
+
+    public void startServer() {
+        while (true) {
+            resetCenters();
+            openServerSocket();
+            listenForConnections();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void resetCenters() {
+        for (ConnectionCenter center : connectionCenters) {
+            center.closeCenter();
+        }
+        connectionCenters.clear();
+    }
+
+    private boolean openServerSocket() {
         try {
             listeningSocket = new DatagramSocket(9001);
+            return true;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            if (listeningSocket != null)
+                listeningSocket.close();
+        }
+        return false;
+    }
+
+    private void listenForConnections() {
+        try {
             findConnection:
             while (true) {
                 System.out.println("Listening for game players.");
                 listeningSocket.receive(inputPacket);
                 System.out.println("Package received.");
 
-                if (!validInput())
-                    continue findConnection;
+                if (!Protocol.validRoomRequest(inputData))
+                    continue;
                 System.out.println("Package has valid input.");
 
                 InetSocketAddress incomingAddress = (InetSocketAddress) inputPacket.getSocketAddress();
@@ -55,24 +89,14 @@ public class GameServer {
                     connectionCenter.addAddress(incomingAddress);
                     System.out.println("Created new room");
                 }
-
             }
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            listeningSocket.close();
+            System.err.println("Error while listening for connections.");
         }
     }
 
-    private boolean validInput() throws BufferUnderflowException {
-        inputData.limit(inputPacket.getLength());
-        inputData.position(0);
-        boolean valid = inputData.getInt() == GameServer.PACKET_HEADER;
-        inputData.clear();
-        return valid;
-    }
-
     public static void main(String[] args) {
-        new GameServer();
+        new GameServer().startServer();
     }
 }

@@ -1,6 +1,6 @@
 package com.andrew.verhagen.line.gambit.systems.multiplayerscreen;
 
-import com.andrew.verhagen.connection.server.Input;
+import com.andrew.verhagen.connection.protocol.Input;
 import com.andrew.verhagen.line.gambit.components.player.Direction;
 import com.andrew.verhagen.line.gambit.components.player.MovementDirection;
 import com.andrew.verhagen.line.gambit.components.player.Player;

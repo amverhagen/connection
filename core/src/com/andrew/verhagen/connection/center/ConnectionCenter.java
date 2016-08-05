@@ -67,4 +67,12 @@ public final class ConnectionCenter {
         inputWorker.start();
         outputWorker.start();
     }
+
+    public void closeCenter() {
+        if (connectionSocket != null) {
+            connectionSocket.close();
+        }
+        centerHandler = null;
+        this.isCenterOn = false;
+    }
 }

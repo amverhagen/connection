@@ -1,6 +1,7 @@
 package com.andrew.verhagen.line.gambit.screens;
 
 import com.andrew.verhagen.line.gambit.GambitGame;
+import com.andrew.verhagen.line.gambit.gameutils.Assets;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -18,7 +19,7 @@ public class LoadingScreen implements Screen {
 
     @Override
     public void show() {
-        font = gameInstance.assets.manager.get("nixie48.ttf", BitmapFont.class);
+        font = gameInstance.assets.manager.get(Assets.nixie48, BitmapFont.class);
     }
 
     @Override

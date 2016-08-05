@@ -26,7 +26,8 @@ public class GambitGame extends Game {
 
     @Override
     public void create() {
-        gameColor = GameColors.WHITE;
+        System.out.println("Create called");
+        gameColor = new Color(GameColors.WHITE);
         assets = new Assets();
         uiCamera = new OrthographicCamera();
         uiViewport = new FitViewport(UI_WIDTH, UI_HEIGHT, uiCamera);

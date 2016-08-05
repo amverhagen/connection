@@ -1,59 +1,51 @@
 package com.andrew.verhagen.line.gambit.screens;
 
-import com.andrew.verhagen.connection.client.ConnectionClient;
-import com.andrew.verhagen.connection.room.ConnectionState;
 import com.andrew.verhagen.line.gambit.GambitGame;
+import com.andrew.verhagen.line.gambit.systems.graphics.ColorManagerSystem;
+import com.andrew.verhagen.line.gambit.systems.graphics.RenderSystem;
+import com.andrew.verhagen.line.gambit.systems.matchmaking.ConnectionOutputStatusSystem;
+import com.andrew.verhagen.line.gambit.systems.matchmaking.ConnectionSystem;
+import com.andrew.verhagen.line.gambit.systems.matchmaking.MatchMakingEntityFactory;
+import com.andrew.verhagen.line.gambit.systems.matchmaking.MatchMakingTouchSystem;
+import com.artemis.Aspect;
+import com.artemis.World;
+import com.artemis.WorldConfiguration;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 public class MatchMakingScreen implements Screen {
 
-    private ConnectionClient connectionClient;
-    private static final String SERVER_ADDRESS = "192.168.0.4";
-    private static final int SERVER_PORT = 9001;
-
-    private SpriteBatch batch;
+    private World matchMakingWorld;
     private final GambitGame gameInstance;
-    private BitmapFont font;
-
+    private ConnectionSystem connectionSystem;
 
     public MatchMakingScreen(GambitGame gambitGame) {
         this.gameInstance = gambitGame;
-        this.batch = new SpriteBatch();
+        this.connectionSystem = new ConnectionSystem();
     }
 
-    private void createConnectionClient() {
-        try {
-            this.connectionClient = new ConnectionClient(InetAddress.getByName(SERVER_ADDRESS), SERVER_PORT);
-        } catch (UnknownHostException e) {
-            if (connectionClient != null)
-                connectionClient.endClientConnection();
+    private void initiateWorld() {
+        if (matchMakingWorld == null) {
+            WorldConfiguration worldConfiguration = new WorldConfiguration();
+            worldConfiguration.setSystem(MatchMakingEntityFactory.class);
+            worldConfiguration.setSystem(new MatchMakingTouchSystem(gameInstance.uiViewport));
+            worldConfiguration.setSystem(connectionSystem = new ConnectionSystem());
+            worldConfiguration.setSystem(new ConnectionOutputStatusSystem(gameInstance, gameInstance.uiCamera));
+            worldConfiguration.setSystem(new ColorManagerSystem(gameInstance));
+            worldConfiguration.setSystem(new RenderSystem(gameInstance, gameInstance.uiCamera, Aspect.all()));
+            matchMakingWorld = new World(worldConfiguration);
         }
     }
 
     @Override
     public void show() {
-        font = gameInstance.assets.manager.get("nixie48.ttf", BitmapFont.class);
-        if (this.connectionClient == null)
-            createConnectionClient();
+        initiateWorld();
     }
 
     @Override
     public void render(float delta) {
-        if (connectionClient.getConnectionState() == ConnectionState.NOT_CONNECTED)
-            connectionClient.connectToServer();
-        draw(connectionClient.getConnectionState().stateDescription);
-    }
-
-    private void draw(String state) {
-        batch.setProjectionMatrix(gameInstance.uiCamera.combined);
-        batch.begin();
-        font.draw(batch, state, gameInstance.UI_WIDTH * 0.05f, gameInstance.UI_HEIGHT * 0.10f);
-        batch.end();
+        matchMakingWorld.setDelta(delta);
+        matchMakingWorld.process();
     }
 
     @Override
@@ -64,6 +56,7 @@ public class MatchMakingScreen implements Screen {
     @Override
     public void pause() {
         System.out.println("Paused called");
+        this.endConnection();
     }
 
     @Override
@@ -74,12 +67,17 @@ public class MatchMakingScreen implements Screen {
     @Override
     public void hide() {
         System.out.println("Hide called");
+        this.endConnection();
     }
 
     @Override
     public void dispose() {
         System.out.println("Dispose called");
-        if (connectionClient != null)
-            connectionClient.endClientConnection();
+        this.endConnection();
+    }
+
+    private void endConnection() {
+        if (connectionSystem != null)
+            connectionSystem.endConnection();
     }
 }

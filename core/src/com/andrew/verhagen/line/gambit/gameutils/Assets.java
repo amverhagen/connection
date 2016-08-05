@@ -18,7 +18,9 @@ public class Assets {
     public static final String twoPlayerButton = "images/two-player-button.png";
     public static final String gambitTittle = "images/gambit-title.png";
     public static final String musicIcon = "images/music-icon.png";
+    public static final String retry = "images/retry.png";
     public static final String clear = "images/clear.png";
+    public static final String nixie48 = "nixie48.ttf";
 
     public AssetManager manager;
 
@@ -37,6 +39,7 @@ public class Assets {
         this.manager.load(twoPlayerButton, Texture.class);
         this.manager.load(gambitTittle, Texture.class);
         this.manager.load(musicIcon, Texture.class);
+        this.manager.load(retry, Texture.class);
         this.manager.load(clear, Texture.class);
     }
 
@@ -48,7 +51,7 @@ public class Assets {
         nixieParams.borderColor = Color.WHITE;
         nixieParams.borderWidth = 1.1f;
         nixieParams.size = 48;
-        generateAndLoadTrueTypeFont("fonts/NixieOne.ttf", "nixie48.ttf", nixieParams);
+        generateAndLoadTrueTypeFont("fonts/NixieOne.ttf", nixie48, nixieParams);
     }
 
     /**

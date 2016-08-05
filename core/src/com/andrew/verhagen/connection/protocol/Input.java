@@ -1,4 +1,4 @@
-package com.andrew.verhagen.connection.server;
+package com.andrew.verhagen.connection.protocol;
 
 public class Input {
 

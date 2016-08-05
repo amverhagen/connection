@@ -4,12 +4,14 @@ import com.andrew.verhagen.line.gambit.GambitGame;
 import com.andrew.verhagen.line.gambit.components.graphics.Renderable;
 import com.andrew.verhagen.line.gambit.components.positional.Bounds;
 import com.andrew.verhagen.line.gambit.components.positional.Position;
+import com.andrew.verhagen.line.gambit.gameutils.Assets;
 import com.artemis.Aspect;
 import com.artemis.ComponentMapper;
 import com.artemis.systems.IteratingSystem;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class RenderSystem extends IteratingSystem {
 
@@ -30,7 +32,6 @@ public class RenderSystem extends IteratingSystem {
         this.camera = camera;
         this.batch = new SpriteBatch();
     }
-
 
 
     @Override
@@ -77,5 +78,14 @@ public class RenderSystem extends IteratingSystem {
     @Override
     protected void end() {
         batch.end();
+    }
+
+    public void setRenderableTexture(int entityId, String textureName) {
+        entityRenderable = renderableComponentMapper.get(entityId);
+        try {
+            entityRenderable.texture = gameInstance.assets.manager.get(textureName, Texture.class);
+        } catch (GdxRuntimeException e) {
+            entityRenderable.texture = gameInstance.assets.manager.get(Assets.white, Texture.class);
+        }
     }
 }
