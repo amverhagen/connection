@@ -22,7 +22,6 @@ public class MatchMakingTouchSystem extends TouchListenerSystem {
             @Override
             public boolean touched(World world, int id, float touchX, float touchY) {
                 connectionSystem.retryConnection();
-                System.out.println("hello");
                 return true;
             }
         };

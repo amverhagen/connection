@@ -4,5 +4,5 @@ import com.andrew.verhagen.connection.room.ConnectionState;
 
 public interface ConnectionObserver {
 
-    public void connectionChange(ConnectionState newState);
+    void connectionChange(ConnectionState newState);
 }

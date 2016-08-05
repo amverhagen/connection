@@ -10,6 +10,8 @@ import com.andrew.verhagen.line.gambit.systems.matchmaking.MatchMakingTouchSyste
 import com.artemis.Aspect;
 import com.artemis.World;
 import com.artemis.WorldConfiguration;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 
 
@@ -18,6 +20,7 @@ public class MatchMakingScreen implements Screen {
     private World matchMakingWorld;
     private final GambitGame gameInstance;
     private ConnectionSystem connectionSystem;
+    private InputProcessor inputProcessor;
 
     public MatchMakingScreen(GambitGame gambitGame) {
         this.gameInstance = gambitGame;
@@ -28,7 +31,9 @@ public class MatchMakingScreen implements Screen {
         if (matchMakingWorld == null) {
             WorldConfiguration worldConfiguration = new WorldConfiguration();
             worldConfiguration.setSystem(MatchMakingEntityFactory.class);
-            worldConfiguration.setSystem(new MatchMakingTouchSystem(gameInstance.uiViewport));
+            MatchMakingTouchSystem touchSystem = new MatchMakingTouchSystem(gameInstance.uiViewport);
+            this.inputProcessor = touchSystem;
+            worldConfiguration.setSystem(touchSystem);
             worldConfiguration.setSystem(connectionSystem = new ConnectionSystem());
             worldConfiguration.setSystem(new ConnectionOutputStatusSystem(gameInstance, gameInstance.uiCamera));
             worldConfiguration.setSystem(new ColorManagerSystem(gameInstance));
@@ -40,6 +45,7 @@ public class MatchMakingScreen implements Screen {
     @Override
     public void show() {
         initiateWorld();
+        Gdx.input.setInputProcessor(this.inputProcessor);
     }
 
     @Override

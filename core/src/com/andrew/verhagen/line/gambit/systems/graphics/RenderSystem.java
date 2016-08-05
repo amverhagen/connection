@@ -33,7 +33,6 @@ public class RenderSystem extends IteratingSystem {
         this.batch = new SpriteBatch();
     }
 
-
     @Override
     protected void inserted(int entityId) {
         entityRenderable = renderableComponentMapper.get(entityId);
@@ -82,10 +81,12 @@ public class RenderSystem extends IteratingSystem {
 
     public void setRenderableTexture(int entityId, String textureName) {
         entityRenderable = renderableComponentMapper.get(entityId);
-        try {
-            entityRenderable.texture = gameInstance.assets.manager.get(textureName, Texture.class);
-        } catch (GdxRuntimeException e) {
-            entityRenderable.texture = gameInstance.assets.manager.get(Assets.white, Texture.class);
+        if (entityRenderable != null) {
+            try {
+                entityRenderable.texture = gameInstance.assets.manager.get(textureName, Texture.class);
+            } catch (GdxRuntimeException e) {
+                entityRenderable.texture = gameInstance.assets.manager.get(Assets.white, Texture.class);
+            }
         }
     }
 }

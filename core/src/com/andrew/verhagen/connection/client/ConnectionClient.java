@@ -14,6 +14,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ConnectionClient {
 
@@ -36,8 +37,9 @@ public class ConnectionClient {
         connectionObservers = new ArrayList<ConnectionObserver>();
     }
 
-    public void connectToServer() {
+    public synchronized void connectToServer(ConnectionObserver... observers) {
         endClientConnection();
+        this.addObserver(observers);
         establishConnection();
     }
 
@@ -47,12 +49,11 @@ public class ConnectionClient {
             public void run() {
                 ByteBuffer serverData = ByteBuffer.allocate(8);
                 DatagramPacket serverPacket = new DatagramPacket(serverData.array(), 0, serverData.capacity());
+                setConnectionState(ConnectionState.CONNECTING);
                 try {
-                    endClientConnection();
                     socket = new DatagramSocket();
                     socket.setSoTimeout(2000);
                     for (int i = 0; i < 5; i++) {
-                        setConnectionState(ConnectionState.CONNECTING);
                         packageOutput(serverData, serverPacket);
                         try {
                             socket.send(serverPacket);
@@ -80,22 +81,14 @@ public class ConnectionClient {
         Protocol.packageRoomRequest(outputData);
     }
 
-    public void addObserver(ConnectionObserver observer) {
-        this.connectionObservers.add(observer);
+    private synchronized void addObserver(ConnectionObserver... observers) {
+        this.connectionObservers.addAll(Arrays.asList(observers));
     }
 
-    private void setConnectionState(ConnectionState connectionState) {
-        synchronized (connectionState) {
-            this.connectionState = connectionState;
-            for (ConnectionObserver observer : connectionObservers) {
-                observer.connectionChange(connectionState);
-            }
-        }
-    }
-
-    public ConnectionState getConnectionState() {
-        synchronized (connectionState) {
-            return connectionState;
+    private synchronized void setConnectionState(ConnectionState connectionState) {
+        this.connectionState = connectionState;
+        for (ConnectionObserver observer : connectionObservers) {
+            observer.connectionChange(connectionState);
         }
     }
 
@@ -104,5 +97,6 @@ public class ConnectionClient {
         if (socket != null)
             socket.close();
         System.out.println("Connection ended");
+        this.connectionObservers.clear();
     }
 }
