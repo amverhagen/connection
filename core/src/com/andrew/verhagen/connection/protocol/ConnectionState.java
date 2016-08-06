@@ -1,4 +1,4 @@
-package com.andrew.verhagen.connection.room;
+package com.andrew.verhagen.connection.protocol;
 
 public enum ConnectionState {
     NOT_CONNECTED("Not Connected"),

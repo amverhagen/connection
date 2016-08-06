@@ -18,6 +18,7 @@ public class GameServer {
     private DatagramPacket inputPacket;
     private ByteBuffer inputData;
     private ArrayList<ConnectionCenter> connectionCenters;
+    private String tag = "GameSever: ";
 
     public GameServer() {
         inputData = ByteBuffer.allocate(8);
@@ -61,38 +62,42 @@ public class GameServer {
         try {
             findConnection:
             while (true) {
-                System.out.println("Listening for game players.");
+                System.out.println(tag + "Listening for game players.");
                 listeningSocket.receive(inputPacket);
-                System.out.println("Package received.");
+                System.out.println(tag + "Package received.");
 
                 if (!Protocol.validRoomRequest(inputData))
                     continue;
-                System.out.println("Package has valid input.");
+                System.out.println(tag + "Package has valid input.");
 
                 InetSocketAddress incomingAddress = (InetSocketAddress) inputPacket.getSocketAddress();
 
                 for (ConnectionCenter connectionCenter : connectionCenters) {
-                    if (connectionCenter.holdingConnection(incomingAddress))
+                    if (connectionCenter.holdingConnection(incomingAddress)) {
+                        System.out.println(tag + "Connection already held.");
                         continue findConnection;
+                    }
                 }
-                System.out.println("Package is not already held.");
+                System.out.println(tag + "Package is not already held.");
 
                 for (ConnectionCenter connectionCenter : connectionCenters) {
-                    if (connectionCenter.addAddress(incomingAddress))
+                    if (connectionCenter.addAddress(incomingAddress)) {
+                        System.out.println(tag + "Added address " + incomingAddress + " to room");
                         continue findConnection;
+                    }
                 }
-                System.out.println("No open rooms. Creating new room.");
+                System.out.println(tag + "No open rooms. Creating new room.");
 
                 if (connectionCenters.size() < MAX_ROOMS) {
                     ConnectionCenter connectionCenter = new ConnectionCenter(new RoomConnectionHandler(256, 2, 2000));
                     connectionCenters.add(connectionCenter);
                     connectionCenter.addAddress(incomingAddress);
-                    System.out.println("Created new room");
+                    System.out.println(tag + "Created new room");
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Error while listening for connections.");
+            System.err.println(tag + "Error while listening for connections.");
         }
     }
 

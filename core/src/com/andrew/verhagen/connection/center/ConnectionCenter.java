@@ -38,6 +38,9 @@ public final class ConnectionCenter {
     }
 
     public synchronized boolean holdingConnection(InetSocketAddress incomingConnectionAddress) {
+        if (connectionSocket == null || connectionSocket.isClosed()) {
+            restartCenter();
+        }
         return centerHandler.holdingConnection(incomingConnectionAddress);
     }
 
@@ -52,6 +55,7 @@ public final class ConnectionCenter {
     private void restartCenter(DatagramSocket socket) {
         try {
             System.out.println("Restarted Center");
+            closeCenter();
             connectionSocket = socket;
             connectionSocket.setSoTimeout(centerHandler.timeOutTimeInMilliseconds);
             centerHandler.resetHandler(connectionSocket);
@@ -72,7 +76,6 @@ public final class ConnectionCenter {
         if (connectionSocket != null) {
             connectionSocket.close();
         }
-        centerHandler = null;
         this.isCenterOn = false;
     }
 }

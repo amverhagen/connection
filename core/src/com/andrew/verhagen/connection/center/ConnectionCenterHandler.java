@@ -44,7 +44,7 @@ public abstract class ConnectionCenterHandler {
 
     protected synchronized final boolean holdingConnection(InetSocketAddress incomingAddress) {
         for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
-            if (connectionAddress.hasSameAddressAndPort(incomingAddress)) return true;
+            if (connectionAddress.hasSameAddress(incomingAddress)) return true;
         }
         return false;
     }

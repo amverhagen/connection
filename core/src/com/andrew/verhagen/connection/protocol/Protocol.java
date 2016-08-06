@@ -6,8 +6,8 @@ import java.nio.ByteBuffer;
 public class Protocol {
     public static final int PACKET_HEADER = 539837401;
     public static final int ROOM_REQUEST = 201;
-    public static final int ACCEPTED_ROOM_REQUEST_HEADER = 401;
 
+    //Header protocol
     public static final boolean validHeader(ByteBuffer inputData) throws BufferUnderflowException {
         inputData.position(0);
         return inputData.getInt() == PACKET_HEADER;
@@ -19,6 +19,7 @@ public class Protocol {
         outputData.putInt(PACKET_HEADER);
     }
 
+    //Room Request protocol.
     public static final boolean validRoomRequest(ByteBuffer inputData) throws BufferUnderflowException {
         if (validHeader(inputData))
             if (inputData.getInt() == ROOM_REQUEST)
@@ -31,15 +32,15 @@ public class Protocol {
         outputData.putInt(ROOM_REQUEST);
     }
 
-    public static final boolean validRoomResponse(ByteBuffer inputData) throws BufferUnderflowException {
+    //Room state protocol
+    public static final boolean validRoomUpdate(ByteBuffer inputData) {
         if (validHeader(inputData))
-            if (inputData.getInt() == ACCEPTED_ROOM_REQUEST_HEADER)
-                return true;
+            return true;
         return false;
     }
 
-    public static final void packageAcceptedRoomRequest(ByteBuffer outputData) {
+    public static final void packageRoomStateUpdate(ByteBuffer outputData, byte roomState) {
         packageHeader(outputData);
-        outputData.putInt(ACCEPTED_ROOM_REQUEST_HEADER);
+        outputData.put(roomState);
     }
 }

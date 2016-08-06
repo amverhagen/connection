@@ -1,6 +1,6 @@
 package com.andrew.verhagen.line.gambit.systems.matchmaking;
 
-import com.andrew.verhagen.connection.room.ConnectionState;
+import com.andrew.verhagen.connection.protocol.ConnectionState;
 import com.andrew.verhagen.line.gambit.GambitGame;
 import com.andrew.verhagen.line.gambit.components.home.ManagedColor;
 import com.andrew.verhagen.line.gambit.components.input.Touchable;
@@ -79,9 +79,10 @@ public class ConnectionOutputStatusSystem extends BaseSystem implements Connecti
             this.setButtonToCancel();
             this.dotTime = 0;
             this.nextDot = -1;
-        } else {
+        } else if (newState == ConnectionState.FAILED) {
             this.setButtonToRetry();
-        }
+        } else
+            this.setButtonToCancel();
         this.currentConnectionState = newState;
         this.outputString = currentConnectionState.stateDescription;
     }
@@ -102,8 +103,8 @@ public class ConnectionOutputStatusSystem extends BaseSystem implements Connecti
     }
 
     private void setButtonToCancel() {
-        connectionButtonTouchable.touchEventName = MatchMakingTouchSystem.cancelConnection;
-        renderSystem.setRenderableTexture(connectionButton, Assets.musicIcon);
+        connectionButtonTouchable.touchEventName = null;
+        renderSystem.setRenderableTexture(connectionButton, Assets.clear);
     }
 
     private void setButtonToRetry() {

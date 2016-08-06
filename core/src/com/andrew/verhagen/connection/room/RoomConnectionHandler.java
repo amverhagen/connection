@@ -10,9 +10,8 @@ import java.nio.ByteBuffer;
 
 public class RoomConnectionHandler extends ConnectionCenterHandler {
 
-    private RoomPlayer playerOne;
-    private RoomPlayer playerTwo;
     private RoomStateManager stateManager;
+    private String tag = "RoomConnectionHandler: ";
 
     public RoomConnectionHandler(int maxPacketSizeInBytes, int maxConnections, int timeOutTimeInMilliseconds) {
         super(maxPacketSizeInBytes, maxConnections, timeOutTimeInMilliseconds);
@@ -22,8 +21,6 @@ public class RoomConnectionHandler extends ConnectionCenterHandler {
     @Override
     protected synchronized void resetHandler(DatagramSocket socket) throws SocketException {
         super.resetHandler(socket);
-        playerOne = null;
-        playerTwo = null;
         stateManager = new RoomStateManager();
     }
 
@@ -31,29 +28,23 @@ public class RoomConnectionHandler extends ConnectionCenterHandler {
     public synchronized boolean addAddress(InetSocketAddress incomingAddress) {
         if (holdingConnection(incomingAddress))
             return false;
-        if (playerOne == null) {
-            System.out.println("Added player");
-            playerOne = new RoomPlayer(incomingAddress, timeOutTimeInMilliseconds);
-            activeConnectionAddresses.add(playerOne);
-        } else if (playerTwo == null) {
-            playerTwo = new RoomPlayer(incomingAddress, timeOutTimeInMilliseconds);
-            activeConnectionAddresses.add(playerTwo);
-        } else return false;
-        return true;
+        if (activeConnectionAddresses.size() >= maxConnections)
+            return false;
+
+        RoomPlayer player = new RoomPlayer(incomingAddress, timeOutTimeInMilliseconds);
+        if (stateManager.connect(player)) {
+            activeConnectionAddresses.add(player);
+            return true;
+        }
+        return false;
     }
 
     @Override
     protected synchronized void removeExpiredAddresses() {
-        System.err.println("Expired connections");
+        System.err.println(tag + "Expired connections");
         for (ConnectionAddress connectionAddress : expiredConnectionAddresses) {
-            if (connectionAddress.hasSameAddressAndPort(playerOne)) {
-                System.out.println("Removed player one.");
-                activeConnectionAddresses.remove(playerOne);
-                playerOne = null;
-            } else if (connectionAddress.hasSameAddressAndPort(playerTwo)) {
-                activeConnectionAddresses.remove(playerTwo);
-                playerTwo = null;
-            }
+            activeConnectionAddresses.remove(connectionAddress);
+            stateManager.disconnect(connectionAddress);
         }
         if (activeConnectionAddresses.size() < 1)
             socket.close();
@@ -61,24 +52,17 @@ public class RoomConnectionHandler extends ConnectionCenterHandler {
 
     @Override
     protected synchronized void sendOutputData(DatagramSocket outputSocket) throws Exception {
+        stateManager.setOutputData(outputData);
+        outputPacket.setLength(outputData.position());
         for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
-            stateManager.setOutputData(outputData);
-            outputPacket.setLength(outputData.position());
             outputPacket.setSocketAddress(connectionAddress.connectionAddress);
-            System.out.println("Set socket address to " + connectionAddress.connectionAddress);
+            System.out.println(tag + "Sending packet to " + connectionAddress.connectionAddress);
             outputSocket.send(outputPacket);
         }
     }
 
     @Override
     protected synchronized void handleNewInput(ByteBuffer inputData, InetSocketAddress inputAddress) {
-        long validReceptionTime = System.nanoTime();
-        if (playerOne.hasSameAddressAndPort(inputAddress)) {
-            if (stateManager.handleInputPlayerOne(inputData))
-                playerOne.timeOfLastInput = validReceptionTime;
-        } else if (playerTwo.hasSameAddressAndPort(inputAddress)) {
-            if (stateManager.handleInputPlayerTwo(inputData))
-                playerTwo.timeOfLastInput = validReceptionTime;
-        }
+        stateManager.handleInput(inputData, inputAddress);
     }
 }

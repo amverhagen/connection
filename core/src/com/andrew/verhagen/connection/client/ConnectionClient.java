@@ -2,7 +2,7 @@ package com.andrew.verhagen.connection.client;
 
 import com.andrew.verhagen.connection.center.ConnectionCenter;
 import com.andrew.verhagen.connection.protocol.Protocol;
-import com.andrew.verhagen.connection.room.ConnectionState;
+import com.andrew.verhagen.connection.protocol.ConnectionState;
 import com.andrew.verhagen.line.gambit.systems.matchmaking.ConnectionObserver;
 
 import java.io.IOException;
@@ -58,17 +58,21 @@ public class ConnectionClient {
                         try {
                             socket.send(serverPacket);
                             socket.receive(serverPacket);
-                            if (Protocol.validRoomResponse(serverData)) {
+                            if (Protocol.validRoomUpdate(serverData)) {
+                                System.out.println("Client received room.");
                                 setConnectionState(ConnectionState.CONNECTED);
                                 handler = new ClientConnectionHandler(256, 1, 2000);
                                 new ConnectionCenter(handler, socket, (InetSocketAddress) serverPacket.getSocketAddress());
                                 return;
+                            } else {
+                                System.out.println("Invalid room response.");
                             }
                         } catch (SocketTimeoutException ste) {
                             System.out.println("Connection timed out, retrying");
                         }
                     }
                 } catch (IOException e) {
+                    e.printStackTrace();
                 }
                 endClientConnection();
             }
@@ -98,5 +102,9 @@ public class ConnectionClient {
             socket.close();
         System.out.println("Connection ended");
         this.connectionObservers.clear();
+    }
+
+    public static void main(String args[]) {
+        new ConnectionClient().establishConnection();
     }
 }

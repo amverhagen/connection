@@ -1,6 +1,5 @@
 package com.andrew.verhagen.connection.client;
 
-import com.andrew.verhagen.connection.center.ConnectionAddress;
 import com.andrew.verhagen.connection.center.ConnectionCenterHandler;
 
 import java.net.DatagramSocket;
@@ -45,20 +44,18 @@ public class ClientConnectionHandler extends ConnectionCenterHandler {
 
     @Override
     protected void sendOutputData(DatagramSocket outputSocket) throws Exception {
-
-        for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
-            stateManager.setOutputData(outputData);
-            outputPacket.setLength(outputData.position());
-            outputPacket.setSocketAddress(connectionAddress.connectionAddress);
-            System.out.println("Set socket address to " + connectionAddress.connectionAddress);
-            outputSocket.send(outputPacket);
-        }
+        stateManager.setOutputData(outputData);
+        outputPacket.setLength(outputData.position());
+        outputPacket.setSocketAddress(serverConnection.connectionAddress);
+        System.out.println("Set socket address to " + serverConnection.connectionAddress);
+        outputSocket.send(outputPacket);
     }
 
     @Override
     protected void handleNewInput(ByteBuffer inputData, InetSocketAddress inputAddress) {
         long receptionTime = System.nanoTime();
         if (serverConnection.hasSameAddressAndPort(inputAddress))
+            if(stateManager.handleInput(inputData))
             serverConnection.timeOfLastInput = receptionTime;
     }
 }

@@ -24,8 +24,11 @@ public class ConnectionAddress {
                 && this.connectionAddress.getPort() == incomingAddress.connectionAddress.getPort();
     }
 
+    public boolean hasSameAddress(InetSocketAddress incomingAddress) {
+        return this.connectionAddress.getAddress().equals(incomingAddress.getAddress());
+    }
+
     public boolean hasSameAddressAndPort(InetSocketAddress incomingAddress) {
-        return this.connectionAddress.getAddress().equals(incomingAddress.getAddress())
-                && this.connectionAddress.getPort() == incomingAddress.getPort();
+        return hasSameAddress(incomingAddress) && this.connectionAddress.getPort() == incomingAddress.getPort();
     }
 }
