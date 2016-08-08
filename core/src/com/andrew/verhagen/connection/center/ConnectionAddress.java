@@ -7,7 +7,7 @@ public class ConnectionAddress {
 
     public InetSocketAddress connectionAddress;
     public final long timeOutTimeInNanoSeconds;
-    public long timeOfLastInput;
+    public long timeOfLastValidInput;
 
     public ConnectionAddress(InetAddress destinationAddress, int destinationPort, int timeOutTimeInMilliSeconds) {
         this(destinationAddress, destinationPort, (long) timeOutTimeInMilliSeconds * 1000000);
@@ -15,7 +15,7 @@ public class ConnectionAddress {
 
     public ConnectionAddress(InetAddress destinationAddress, int destinationPort, long timeOutTimeInNanoSeconds) {
         this.timeOutTimeInNanoSeconds = timeOutTimeInNanoSeconds;
-        this.timeOfLastInput = System.nanoTime();
+        this.timeOfLastValidInput = System.nanoTime();
         this.connectionAddress = new InetSocketAddress(destinationAddress, destinationPort);
     }
 

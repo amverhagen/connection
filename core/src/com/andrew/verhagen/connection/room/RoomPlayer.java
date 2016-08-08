@@ -9,19 +9,19 @@ import java.nio.ByteBuffer;
 
 public class RoomPlayer extends ConnectionAddress {
 
-    private int latestInputSequence;
-    private byte[] lastInputs;
     protected boolean connected;
+    private InputTracker inputTracker;
 
     public RoomPlayer(InetSocketAddress inetSocketAddress, int timeOutTimeInMilliSeconds) {
         super(inetSocketAddress.getAddress(), inetSocketAddress.getPort(), timeOutTimeInMilliSeconds);
-        latestInputSequence = 0;
-        lastInputs = new byte[15];
-        connected = true;
+        this.inputTracker = new InputTracker(15);
+        this.connected = true;
     }
 
     public void handleInput(ByteBuffer inputData) throws BufferUnderflowException {
-        if (Protocol.validHeader(inputData))
-            this.timeOfLastInput = System.nanoTime();
+        if (Protocol.validInputUpdate(inputData)) {
+            if (inputTracker.updateInput(inputData))
+                this.timeOfLastValidInput = System.nanoTime();
+        }
     }
 }

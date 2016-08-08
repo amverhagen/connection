@@ -117,6 +117,7 @@ public class RoomStateManager {
         } else if ((playerOne != null && playerOne.connected) || (playerTwo != null && playerTwo.connected)) {
             roomState = RoomState.ONE_PLAYER;
         } else
+        //Notify connection handler that room is empty
             roomState = RoomState.EMPTY;
     }
 }

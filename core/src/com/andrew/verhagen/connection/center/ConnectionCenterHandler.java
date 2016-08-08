@@ -53,7 +53,7 @@ public abstract class ConnectionCenterHandler {
         long receptionTime = System.nanoTime();
 
         for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
-            if ((receptionTime - connectionAddress.timeOfLastInput) >= connectionAddress.timeOutTimeInNanoSeconds) {
+            if ((receptionTime - connectionAddress.timeOfLastValidInput) >= connectionAddress.timeOutTimeInNanoSeconds) {
                 expiredConnectionAddresses.add(connectionAddress);
             }
         }

@@ -18,7 +18,6 @@ import java.util.Arrays;
 
 public class ConnectionClient {
 
-    private ConnectionState connectionState;
     private ClientConnectionHandler handler;
     private DatagramSocket socket;
     private InetAddress serverAddress;
@@ -28,7 +27,6 @@ public class ConnectionClient {
 
 
     public ConnectionClient() {
-        this.connectionState = ConnectionState.NOT_CONNECTED;
         try {
             this.serverAddress = InetAddress.getByName(SERVER_ADDRESS);
         } catch (UnknownHostException e) {
@@ -90,7 +88,6 @@ public class ConnectionClient {
     }
 
     private synchronized void setConnectionState(ConnectionState connectionState) {
-        this.connectionState = connectionState;
         for (ConnectionObserver observer : connectionObservers) {
             observer.connectionChange(connectionState);
         }

@@ -21,7 +21,7 @@ public class ClientConnectionHandler extends ConnectionCenterHandler {
     protected synchronized void resetHandler(DatagramSocket socket) throws SocketException {
         super.resetHandler(socket);
         serverConnection = null;
-        stateManager = new ClientStateManager();
+        stateManager = new ClientStateManager(15);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class ClientConnectionHandler extends ConnectionCenterHandler {
         stateManager.setOutputData(outputData);
         outputPacket.setLength(outputData.position());
         outputPacket.setSocketAddress(serverConnection.connectionAddress);
-        System.out.println("Set socket address to " + serverConnection.connectionAddress);
+        System.out.println("Sending packet to  " + serverConnection.connectionAddress);
         outputSocket.send(outputPacket);
     }
 
@@ -56,6 +56,6 @@ public class ClientConnectionHandler extends ConnectionCenterHandler {
         long receptionTime = System.nanoTime();
         if (serverConnection.hasSameAddressAndPort(inputAddress))
             if(stateManager.handleInput(inputData))
-            serverConnection.timeOfLastInput = receptionTime;
+            serverConnection.timeOfLastValidInput = receptionTime;
     }
 }
