@@ -19,9 +19,7 @@ public class RoomPlayer extends ConnectionAddress {
     }
 
     public void handleInput(ByteBuffer inputData) throws BufferUnderflowException {
-        if (Protocol.validInputUpdate(inputData)) {
-            if (inputTracker.updateInput(inputData))
-                this.timeOfLastValidInput = System.nanoTime();
-        }
+        if (inputTracker.updateInput(inputData))
+            this.timeOfLastValidInput = System.nanoTime();
     }
 }
