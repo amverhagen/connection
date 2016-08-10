@@ -57,8 +57,8 @@ public final class ConnectionCenter {
             closeCenter();
             connectionSocket = socket;
             connectionSocket.setSoTimeout(centerHandler.timeOutTimeInMilliseconds);
-            inputWorker = new CenterInputWorker(connectionSocket, centerHandler);
-            outputWorker = new CenterOutputWorker(centerHandler, connectionSocket);
+            inputWorker = new CenterInputWorker(centerHandler);
+            outputWorker = new CenterOutputWorker(centerHandler);
         } catch (SocketException e) {
             e.printStackTrace();
         }

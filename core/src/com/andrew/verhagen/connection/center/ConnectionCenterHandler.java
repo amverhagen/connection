@@ -7,7 +7,7 @@ import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-public abstract class ConnectionCenterHandler {
+public abstract class ConnectionCenterHandler implements UDPInputHandler, OutputSender {
 
     protected DatagramSocket socket;
 

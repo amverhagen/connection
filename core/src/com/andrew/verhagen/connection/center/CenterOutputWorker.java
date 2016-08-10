@@ -4,19 +4,19 @@ import java.io.IOException;
 
 class CenterOutputWorker extends Thread {
 
-    private ConnectionCenterHandler outputHandler;
+    private OutputSender outputSender;
 
-    public CenterOutputWorker(ConnectionCenterHandler outputHandler) {
-        this.outputHandler = outputHandler;
+    public CenterOutputWorker(OutputSender outputSender) {
+        this.outputSender = outputSender;
     }
 
     @Override
     public void run() {
         try {
             while (true) {
-                outputHandler.sendOutputData(socket);
+                outputSender.sendOutput();
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(outputSender.getOutputDelayInMilliSeconds());
                 } catch (InterruptedException e) {
                     throw new IOException();
                 }
