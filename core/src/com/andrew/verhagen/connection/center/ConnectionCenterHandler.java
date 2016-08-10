@@ -9,7 +9,6 @@ import java.util.ArrayList;
 
 public abstract class ConnectionCenterHandler {
 
-    protected ConnectionCenter connectionCenter;
     protected DatagramSocket socket;
 
     protected final int maxConnections;
@@ -32,16 +31,6 @@ public abstract class ConnectionCenterHandler {
         this.expiredConnectionAddresses = new ArrayList<ConnectionAddress>();
     }
 
-    protected synchronized void resetHandler(DatagramSocket socket) throws SocketException {
-        this.socket = socket;
-        this.activeConnectionAddresses.clear();
-        this.expiredConnectionAddresses.clear();
-    }
-
-    protected synchronized final void setConnectionCenter(ConnectionCenter connectionCenter) {
-        this.connectionCenter = connectionCenter;
-    }
-
     protected synchronized final boolean holdingConnection(InetSocketAddress incomingAddress) {
         for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
             if (connectionAddress.hasSameAddress(incomingAddress)) return true;
@@ -54,7 +43,7 @@ public abstract class ConnectionCenterHandler {
 
         for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
             if ((receptionTime - connectionAddress.timeOfLastValidInput) >= connectionAddress.timeOutTimeInNanoSeconds) {
-                System.err.println("Address had a timout time of " + connectionAddress.timeOutTimeInNanoSeconds);
+                System.err.println("Address had a timeout time of " + connectionAddress.timeOutTimeInNanoSeconds);
                 System.err.println("Address last input was " + (receptionTime - connectionAddress.timeOfLastValidInput) + " nano seconds ago.");
                 expiredConnectionAddresses.add(connectionAddress);
             }
@@ -64,6 +53,10 @@ public abstract class ConnectionCenterHandler {
 
         if (this.holdingConnection(inputAddress))
             handleNewInput(inputData, inputAddress);
+    }
+
+    protected DatagramSocket getSocket() {
+        return socket;
     }
 
     public abstract boolean addAddress(InetSocketAddress incomingAddress);

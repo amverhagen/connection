@@ -3,20 +3,19 @@ package com.andrew.verhagen.connection.center;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
 
 public final class ConnectionCenter {
-
-    protected DatagramSocket connectionSocket;
 
     private boolean isCenterOn;
     private CenterInputWorker inputWorker;
     private CenterOutputWorker outputWorker;
     private ConnectionCenterHandler centerHandler;
 
+    private DatagramSocket connectionSocket;
 
     public ConnectionCenter(ConnectionCenterHandler centerHandler) {
         this.centerHandler = centerHandler;
-        this.centerHandler.setConnectionCenter(this);
     }
 
     public ConnectionCenter(ConnectionCenterHandler centerHandler, DatagramSocket socket, InetSocketAddress address) {
@@ -58,7 +57,6 @@ public final class ConnectionCenter {
             closeCenter();
             connectionSocket = socket;
             connectionSocket.setSoTimeout(centerHandler.timeOutTimeInMilliseconds);
-            centerHandler.resetHandler(connectionSocket);
             inputWorker = new CenterInputWorker(connectionSocket, centerHandler);
             outputWorker = new CenterOutputWorker(centerHandler, connectionSocket);
         } catch (SocketException e) {
@@ -72,10 +70,40 @@ public final class ConnectionCenter {
         outputWorker.start();
     }
 
-    public void closeCenter() {
+    public synchronized void closeCenter() {
         if (connectionSocket != null) {
             connectionSocket.close();
         }
         this.isCenterOn = false;
+    }
+
+    public synchronized boolean startCenter(ConnectionCenterHandler handler) {
+        if (this.isActive())
+            return false;
+        this.centerHandler = handler;
+        this.connectionSocket = handler.getSocket();
+        inputWorker = new CenterInputWorker(centerHandler);
+        outputWorker = new CenterOutputWorker(centerHandler);
+        return true;
+    }
+
+    public synchronized void closeConnectionCenter() {
+        if (connectionSocket != null)
+            connectionSocket.close();
+        this.centerHandler = null;
+        this.inputWorker = null;
+        this.outputWorker = null;
+    }
+
+    protected synchronized boolean interruptHandlerForOutput() {
+        return false;
+    }
+
+    protected synchronized boolean interruptHandlerWithInput(ByteBuffer inputBuffer, InetSocketAddress remoteAddress) {
+        return false;
+    }
+
+    private boolean isActive() {
+        return connectionSocket != null && !connectionSocket.isClosed();
     }
 }

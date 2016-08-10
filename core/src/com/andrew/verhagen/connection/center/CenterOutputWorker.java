@@ -1,16 +1,13 @@
 package com.andrew.verhagen.connection.center;
 
 import java.io.IOException;
-import java.net.DatagramSocket;
 
 class CenterOutputWorker extends Thread {
 
-    private DatagramSocket socket;
     private ConnectionCenterHandler outputHandler;
 
-    public CenterOutputWorker(ConnectionCenterHandler outputHandler, DatagramSocket socket) {
+    public CenterOutputWorker(ConnectionCenterHandler outputHandler) {
         this.outputHandler = outputHandler;
-        this.socket = socket;
     }
 
     @Override
@@ -18,9 +15,6 @@ class CenterOutputWorker extends Thread {
         try {
             while (true) {
                 outputHandler.sendOutputData(socket);
-                if (socket.isClosed())
-                    break;
-                System.out.println("Sending output");
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
@@ -30,7 +24,6 @@ class CenterOutputWorker extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            socket.close();
         }
     }
 }
