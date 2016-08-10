@@ -13,4 +13,6 @@ public enum ConnectionState {
     ConnectionState(String stateDescription) {
         this.stateDescription = stateDescription;
     }
+
 }
+

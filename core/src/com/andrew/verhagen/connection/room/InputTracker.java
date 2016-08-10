@@ -11,9 +11,9 @@ public class InputTracker {
 
     private final byte[] savedInputs;
     private int savedSequenceNumber;
+
     private final byte[] incomingInputs;
     private int incomingSequenceNumber;
-
 
     public InputTracker(int numberOfInputs) {
         this.savedSequenceNumber = 0;
@@ -22,7 +22,13 @@ public class InputTracker {
         Arrays.fill(this.savedInputs, Input.NOT_RECEIVED);
     }
 
-    public synchronized boolean updateInput(ByteBuffer incomingData) {
+    public synchronized int getSavedSequenceNumber() {
+        return savedSequenceNumber;
+    }
+
+    public synchronized boolean updateInput(ByteBuffer incomingData, int roomSequenceNumber) {
+        if (savedSequenceNumber >= roomSequenceNumber + savedInputs.length)
+            return false;
         if (validInput(incomingData)) {
             updateSavedInputs();
             return true;
@@ -45,6 +51,7 @@ public class InputTracker {
             return Input.isValidInput(incomingInputs) && consistentWithSavedData();
 
         } catch (BufferUnderflowException e) {
+            e.printStackTrace();
             return false;
         }
     }

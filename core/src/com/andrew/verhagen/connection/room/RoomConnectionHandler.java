@@ -13,6 +13,7 @@ public class RoomConnectionHandler extends ConnectionCenterHandler {
     private RoomStateManager stateManager;
     private String tag = "RoomConnectionHandler: ";
 
+
     public RoomConnectionHandler(int maxPacketSizeInBytes, int maxConnections, int timeOutTimeInMilliseconds) {
         super(maxPacketSizeInBytes, maxConnections, timeOutTimeInMilliseconds);
         this.stateManager = new RoomStateManager();
@@ -31,9 +32,10 @@ public class RoomConnectionHandler extends ConnectionCenterHandler {
         if (activeConnectionAddresses.size() >= maxConnections)
             return false;
 
-        RoomPlayer player = new RoomPlayer(incomingAddress, timeOutTimeInMilliseconds);
-        if (stateManager.connect(player)) {
-            activeConnectionAddresses.add(player);
+        //TODO Fix this.
+        ConnectionAddress incomingConnectionAddress = new ConnectionAddress(incomingAddress, timeOutTimeInMilliseconds);
+        if (stateManager.connect(incomingConnectionAddress)) {
+            activeConnectionAddresses.add(incomingConnectionAddress);
             return true;
         }
         return false;
@@ -52,11 +54,12 @@ public class RoomConnectionHandler extends ConnectionCenterHandler {
 
     @Override
     protected synchronized void sendOutputData(DatagramSocket outputSocket) throws Exception {
-        stateManager.setOutputData(outputData);
-        outputPacket.setLength(outputData.position());
+
         for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
-            outputPacket.setSocketAddress(connectionAddress.connectionAddress);
-            System.out.println(tag + "Sending packet to " + connectionAddress.connectionAddress);
+            stateManager.packOutputBuffer(outputData, connectionAddress.inetSocketAddress);
+            outputPacket.setLength(outputData.position());
+            outputPacket.setSocketAddress(connectionAddress.inetSocketAddress);
+            System.out.println(tag + "Sending packet to " + connectionAddress.inetSocketAddress);
             outputSocket.send(outputPacket);
         }
     }

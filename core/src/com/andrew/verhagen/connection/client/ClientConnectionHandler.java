@@ -1,6 +1,10 @@
 package com.andrew.verhagen.connection.client;
 
+import com.andrew.verhagen.connection.center.ConnectionAddress;
 import com.andrew.verhagen.connection.center.ConnectionCenterHandler;
+import com.andrew.verhagen.connection.protocol.InputHandlerMapper;
+import com.andrew.verhagen.connection.protocol.OutputHandlerMapper;
+import com.andrew.verhagen.connection.protocol.Protocol;
 
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
@@ -9,8 +13,10 @@ import java.nio.ByteBuffer;
 
 public class ClientConnectionHandler extends ConnectionCenterHandler {
 
-    private ServerConnection serverConnection;
+    private ConnectionAddress serverConnection;
     private ClientStateManager stateManager;
+    private InputHandlerMapper inputHandlerMapper;
+    private OutputHandlerMapper outputHandlerMapper;
 
     public ClientConnectionHandler(int maxPacketSizeInBytes, int maxConnections, int timeOutTimeInMilliseconds) {
         super(maxPacketSizeInBytes, maxConnections, timeOutTimeInMilliseconds);
@@ -21,7 +27,9 @@ public class ClientConnectionHandler extends ConnectionCenterHandler {
     protected synchronized void resetHandler(DatagramSocket socket) throws SocketException {
         super.resetHandler(socket);
         serverConnection = null;
-        stateManager = new ClientStateManager(15);
+        stateManager = new ClientStateManager(Protocol.INPUT_LENGTH);
+        inputHandlerMapper = new InputHandlerMapper(stateManager);
+        outputHandlerMapper = new OutputHandlerMapper(stateManager);
     }
 
     @Override
@@ -29,7 +37,7 @@ public class ClientConnectionHandler extends ConnectionCenterHandler {
         if (holdingConnection(incomingAddress))
             return false;
         if (activeConnectionAddresses.size() < maxConnections) {
-            serverConnection = new ServerConnection(incomingAddress.getAddress(), incomingAddress.getPort(), timeOutTimeInMilliseconds);
+            serverConnection = new ConnectionAddress(incomingAddress, timeOutTimeInMilliseconds);
             activeConnectionAddresses.add(serverConnection);
             return true;
         }
@@ -43,19 +51,18 @@ public class ClientConnectionHandler extends ConnectionCenterHandler {
     }
 
     @Override
-    protected void sendOutputData(DatagramSocket outputSocket) throws Exception {
-        stateManager.setOutputData(outputData);
+    protected synchronized void sendOutputData(DatagramSocket outputSocket) throws Exception {
+        outputHandlerMapper.packOutput(outputData);
         outputPacket.setLength(outputData.position());
-        outputPacket.setSocketAddress(serverConnection.connectionAddress);
-        System.out.println("Sending packet to  " + serverConnection.connectionAddress);
+        outputPacket.setSocketAddress(serverConnection.inetSocketAddress);
+        System.out.println("Sending packet to  " + serverConnection.inetSocketAddress);
         outputSocket.send(outputPacket);
     }
 
     @Override
-    protected void handleNewInput(ByteBuffer inputData, InetSocketAddress inputAddress) {
-        long receptionTime = System.nanoTime();
+    protected synchronized void handleNewInput(ByteBuffer inputData, InetSocketAddress inputAddress) {
         if (serverConnection.hasSameAddressAndPort(inputAddress))
-            if(stateManager.handleInput(inputData))
-            serverConnection.timeOfLastValidInput = receptionTime;
+            if (inputHandlerMapper.handleInput(inputData))
+                serverConnection.timeOfLastValidInput = System.nanoTime();
     }
 }

@@ -7,6 +7,7 @@ import com.andrew.verhagen.connection.room.RoomConnectionHandler;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public class GameServer {
         try {
             findConnection:
             while (true) {
-                System.out.println(tag + "Listening for game players.");
+                System.out.println(tag + "Listening for game players on " + InetAddress.getLocalHost());
                 listeningSocket.receive(inputPacket);
                 System.out.println(tag + "Package received.");
 

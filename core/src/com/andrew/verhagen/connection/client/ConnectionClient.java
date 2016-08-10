@@ -21,7 +21,7 @@ public class ConnectionClient {
     private ClientConnectionHandler handler;
     private DatagramSocket socket;
     private InetAddress serverAddress;
-    private static final String SERVER_ADDRESS = "192.168.0.4";
+    private static final String SERVER_ADDRESS = "192.168.0.7";
     private static final int SERVER_PORT = 9001;
     private ArrayList<ConnectionObserver> connectionObservers;
 
@@ -56,7 +56,7 @@ public class ConnectionClient {
                         try {
                             socket.send(serverPacket);
                             socket.receive(serverPacket);
-                            if (Protocol.validRoomUpdate(serverData)) {
+                            if (Protocol.validHeader(serverData)) {
                                 System.out.println("Client received room.");
                                 setConnectionState(ConnectionState.CONNECTED);
                                 handler = new ClientConnectionHandler(256, 1, 2000);

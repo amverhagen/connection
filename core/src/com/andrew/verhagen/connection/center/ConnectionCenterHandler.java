@@ -54,6 +54,8 @@ public abstract class ConnectionCenterHandler {
 
         for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
             if ((receptionTime - connectionAddress.timeOfLastValidInput) >= connectionAddress.timeOutTimeInNanoSeconds) {
+                System.err.println("Address had a timout time of " + connectionAddress.timeOutTimeInNanoSeconds);
+                System.err.println("Address last input was " + (receptionTime - connectionAddress.timeOfLastValidInput) + " nano seconds ago.");
                 expiredConnectionAddresses.add(connectionAddress);
             }
         }
