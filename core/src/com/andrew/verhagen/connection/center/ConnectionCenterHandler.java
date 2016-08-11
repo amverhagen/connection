@@ -11,6 +11,10 @@ public abstract class ConnectionCenterHandler implements UDPInputHandler, Output
 
     protected DatagramSocket socket;
 
+    private UDPInputHandler inputHandler;
+    private OutputSender outputSender;
+    private ConnectionMaintainer connectionMaintainer;
+
     protected final int maxConnections;
     protected final int maxPacketSizeInBytes;
     protected final int timeOutTimeInMilliseconds;
@@ -31,11 +35,24 @@ public abstract class ConnectionCenterHandler implements UDPInputHandler, Output
         this.expiredConnectionAddresses = new ArrayList<ConnectionAddress>();
     }
 
+    public ConnectionCenterHandler(ConnectionMaintainer connectionMaintainer) {
+        this.connectionMaintainer = connectionMaintainer;
+        this.maxConnections = connectionMaintainer.maxConnections;
+        this.maxPacketSizeInBytes = 256;
+        this.timeOutTimeInMilliseconds = connectionMaintainer.timeOutTimeInMilliseconds;
+        this.outputData = ByteBuffer.allocate(maxPacketSizeInBytes);
+        this.outputPacket = new DatagramPacket(this.outputData.array(), this.outputData.capacity());
+    }
+
     protected synchronized final boolean holdingConnection(InetSocketAddress incomingAddress) {
         for (ConnectionAddress connectionAddress : activeConnectionAddresses) {
             if (connectionAddress.hasSameAddress(incomingAddress)) return true;
         }
         return false;
+    }
+
+    protected synchronized final boolean holdingInetSocketAddress(InetSocketAddress address) {
+        return this.connectionMaintainer.holdingConnection(address);
     }
 
     synchronized final void refreshHandlerWithInput(ByteBuffer inputData, InetSocketAddress inputAddress) {
@@ -65,5 +82,7 @@ public abstract class ConnectionCenterHandler implements UDPInputHandler, Output
 
     protected abstract void sendOutputData(DatagramSocket outputSocket) throws Exception;
 
-    protected abstract void handleNewInput(ByteBuffer inputData, InetSocketAddress inputAddress);
+    protected void handleNewInput(ByteBuffer inputData, InetSocketAddress inputAddress) {
+        connectionMaintainer.receivedValidInputFromAddress(inputAddress);
+    }
 }
